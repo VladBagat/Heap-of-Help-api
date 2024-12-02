@@ -6,6 +6,6 @@ app = Flask(__name__)
 def hello_world():
     return "<p>Hello, World!</p>"
 
-@app.route("/hello")
+@app.route("/hello", methods=['GET'])
 def hello_world1():
-    return "<p>I am a sigma sigma John Pork!</p>"
+    return "I am a sigma sigma John Pork!"
