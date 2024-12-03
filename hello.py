@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/": {"origins":"https://heap-of-help.vercel.app"}}) # Allows unrestricted internet access. CRITICAL!!!
+CORS(app, resources={r"/*": {"origins":"https://heap-of-help.vercel.app"}}) # Allows unrestricted internet access. CRITICAL!!!
 
 @app.route("/")
 def hello_world():
