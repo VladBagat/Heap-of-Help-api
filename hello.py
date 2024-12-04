@@ -2,15 +2,11 @@ from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins":"https://heap-of-help.vercel.app"}})
+CORS(app, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
-
-from flask import Flask, request, jsonify, abort
-
-app = Flask(__name__)
 
 @app.route("/login", methods=['POST'])
 def authorize_user():
@@ -34,6 +30,3 @@ def authorize_user():
         "message": "Authorization successful"
     }), 200
 
-
-
-       
