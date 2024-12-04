@@ -7,7 +7,7 @@ from os import getenv
 from utils import token_required
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
 load_dotenv()
 
