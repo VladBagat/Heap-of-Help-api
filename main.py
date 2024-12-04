@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort, make_response
 from flask_cors import CORS
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from dotenv import load_dotenv
 from os import getenv
 from utils import token_required
@@ -19,10 +19,25 @@ def generate_jwt(payload):
         jwt_secret, 
         algorithm="HS256"
     )
+    
+def generate_cookie(response, token, remember):
+    if remember:
+        expires = datetime.now(UTC) + timedelta(days=14)
+    else:
+        expires = None
+    
+    response.set_cookie(
+        "jwt", 
+        token, 
+        httponly=True, 
+        secure=True, 
+        samesite="Strict",
+        expires=expires
+        )
 
-@app.route("/hello")
+@app.route("/hello", methods=['GET'])
 @token_required
-def hello_world():
+def hello_world(current_user):
     return "<p>Hello, World!</p>"
 
 @app.route("/login", methods=['POST'])
@@ -32,6 +47,7 @@ def authorize_user():
 
     request_username = request.json.get('username')
     request_password = request.json.get('password')
+    remember = request.json.get('remember')
 
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
@@ -41,21 +57,23 @@ def authorize_user():
 
     if request_password != mock_password:
         abort(401, description="Invalid credentials")
-        
-    token = generate_jwt({"user_id": 1, "exp":datetime.utcnow() + timedelta(days=7)})
     
     response = make_response(jsonify({
         "success": True,
         "message": "Authorization successful"}, 200
     ))
-
-    response.set_cookie(
-        "jwt", 
-        token, 
-        httponly=True, 
-        secure=True, 
-        samesite="Strict"
-    )
     
+    if remember:
+        token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
+        
+        generate_cookie(response, token, True)
+        
+    else:
+        token = generate_jwt({"user_id": 1})
+        
+        generate_cookie(response, token, False)
+        
     return response
 
+if __name__ == "__main__":
+    app.run(debug=True)

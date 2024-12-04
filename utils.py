@@ -1,13 +1,15 @@
 from functools import wraps
 from flask import request, abort
 import jwt
+from os import getenv
+
+jwt_secret = getenv('SECRET')
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-        if "Authorization" in request.headers:
-            token = request.headers["Authorization"].split(" ")[1]
+        token = request.cookies.get('jwt')
+        
         if not token:
             abort(401, description="Authorization token is missing")
         try:
@@ -15,7 +17,7 @@ def token_required(f):
             current_user=data["user_id"]
             if current_user is None:
                 abort(403, description="Bad Credentials")
-        except jwt.ExpiredSignatureError as e:
+        except jwt.ExpiredSignatureError:
             abort(403, description="Token is outdated")
 
         return f(current_user, *args, **kwargs)
