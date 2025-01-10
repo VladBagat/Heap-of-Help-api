@@ -31,9 +31,11 @@ def generate_cookie(response, token, remember):
         token, 
         httponly=True, 
         secure=True, 
-        samesite="Strict",
+        samesite="None", #TODO: Evaluate effect of this on security. 
         expires=expires
         )
+    
+    return response
 
 @app.route("/hello", methods=['GET'])
 @token_required
@@ -41,7 +43,7 @@ def hello_world(current_user):
     return "<p>Hello, World!</p>"
 
 @app.route("/login", methods=['POST'])
-def authorize_user():
+def authorize_user_credentials():
     mock_username = "admin"  # Replace with actual DB check
     mock_password = "111"    # Replace with password hash check
 
@@ -52,11 +54,9 @@ def authorize_user():
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
 
-    if request_username != mock_username:
+    if request_username != mock_username or request_password != mock_password:
         abort(401, description="User not found")
 
-    if request_password != mock_password:
-        abort(401, description="Invalid credentials")
     
     response = make_response(jsonify({
         "success": True,
@@ -64,17 +64,16 @@ def authorize_user():
     ))
     
     if remember:
-        token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
+        token = generate_jwt({"user_id": request_username, "exp":datetime.now(UTC) + timedelta(days=14)})
         
         generate_cookie(response, token, True)
         
     else:
-        token = generate_jwt({"user_id": 1})
+        token = generate_jwt({"user_id": request_username})
         
         generate_cookie(response, token, False)
         
     return response
-
 
 @app.route("/register", methods=['POST'])
 def register_user():
@@ -101,6 +100,25 @@ def register_user():
         
     return response
 
+@app.route("/auth", methods=['GET'])
+@token_required
+def authorize_user_cookie(user_id):
+    '''Fetches user_id (login so far) from browser-saved cookie and returns it to the frontend.
+    If no cookie is supplied (only happens when cookie is absent/outdated) then bad request is returned.'''
+    
+    if not user_id:
+        response = make_response(jsonify({
+        "success": False,
+        "message": "Credentials not found",}, 401
+    ))
+    
+    response = make_response(jsonify({
+        "success": True,
+        "message": "Authorization successful",
+        "user_id": user_id}, 200
+    ))
+    
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
