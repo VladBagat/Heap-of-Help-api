@@ -29,10 +29,9 @@ def generate_cookie(response, token, remember):
     response.set_cookie(
         "jwt", 
         token, 
-        httponly=False, #True
-        secure=True, #True
-        samesite="None",
-        domain=request.headers.get('Origin'),
+        httponly=True, 
+        secure=True, 
+        samesite="None", #TODO: Evaluate effect of this on security. 
         expires=expires
         )
     
@@ -79,8 +78,8 @@ def authorize_user_credentials():
 @app.route("/auth", methods=['GET'])
 @token_required
 def authorize_user_cookie(user_id):
-    
-    print(user_id)
+    '''Fetches user_id (login so far) from browser-saved cookie and returns it to the frontend.
+    If no cookie is supplied (only happens when cookie is absent/outdated) then bad request is returned.'''
     
     if not user_id:
         response = make_response(jsonify({
