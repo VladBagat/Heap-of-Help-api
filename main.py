@@ -75,6 +75,31 @@ def authorize_user_credentials():
         
     return response
 
+@app.route("/register", methods=['POST'])
+def register_user():
+    request_username = request.json.get('username')
+    request_password = request.json.get('password')
+
+    if not request_username or not request_password:
+        abort(400, description="Username and password are required")
+    
+    if len(request_password) < 8 :
+        abort(400, description="Password must be at least 8 characters long")
+    
+    # When we have a user tbl will also need check that username isn't already taken
+    # And hash password before storing
+    
+    response = make_response(jsonify({
+        "success": True,
+        "message": "Registration successful"}, 200
+    ))
+
+    token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
+    
+    generate_cookie(response, token, True)
+        
+    return response
+
 @app.route("/auth", methods=['GET'])
 @token_required
 def authorize_user_cookie(user_id):
