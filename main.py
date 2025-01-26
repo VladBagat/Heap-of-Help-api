@@ -4,7 +4,13 @@ import jwt
 from datetime import datetime, timedelta, UTC
 from dotenv import load_dotenv
 from os import getenv
+
+from psycopg2 import sql
+
 from utils import token_required
+import re
+import psycopg2
+import bcrypt
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
@@ -37,10 +43,21 @@ def generate_cookie(response, token, remember):
     
     return response
 
+
+def connect_db():
+    con = psycopg2.connect(host=getenv("HOST"),
+                           database=getenv('DATABASE'),
+                           user=getenv('USER'),
+                           password=getenv('PASSWORD')
+                           )
+    return con
+
+
 @app.route("/hello", methods=['GET'])
 @token_required
 def hello_world(current_user):
     return "<p>Hello, World!</p>"
+
 
 @app.route("/login", methods=['POST'])
 def authorize_user_credentials():
@@ -75,20 +92,33 @@ def authorize_user_credentials():
         
     return response
 
+
 @app.route("/register", methods=['POST'])
 def register_user():
     request_username = request.json.get('username')
     request_password = request.json.get('password')
-
+    # Server-side validation
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
-    
-    if len(request_password) < 8 :
+
+    if not re.match(r'^[a-zA-Z0-9\s]*$', request_username):
+        abort(400, description="Username Invalid")
+
+    if len(request_password) < 8:
         abort(400, description="Password must be at least 8 characters long")
-    
-    # When we have a user tbl will also need check that username isn't already taken
-    # And hash password before storing
-    
+
+    hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt())
+    con = connect_db()
+    cur = con.cursor()
+    cur.execute(sql.SQL(
+        "INSERT INTO users (username, password) VALUES ({username}, {password});"
+    ).format(
+        username=sql.Literal(request_username),
+        password=sql.Literal(hashed_password)
+    ))
+    cur.close()
+    con.close()
+
     response = make_response(jsonify({
         "success": True,
         "message": "Registration successful"}, 200
