@@ -5,11 +5,9 @@ from datetime import datetime, timedelta, UTC
 from dotenv import load_dotenv
 from os import getenv
 
-from psycopg2 import sql
-
+from database import register_user_db
 from utils import token_required
 import re
-import psycopg2
 import bcrypt
 
 app = Flask(__name__)
@@ -42,15 +40,6 @@ def generate_cookie(response, token, remember):
         )
     
     return response
-
-
-def connect_db():
-    con = psycopg2.connect(host=getenv("HOST"),
-                           database=getenv('DATABASE'),
-                           user=getenv('USER'),
-                           password=getenv('PASSWORD')
-                           )
-    return con
 
 
 @app.route("/hello", methods=['GET'])
@@ -108,27 +97,22 @@ def register_user():
         abort(400, description="Password must be at least 8 characters long")
 
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt())
-    con = connect_db()
-    cur = con.cursor()
-    cur.execute(sql.SQL(
-        "INSERT INTO users (username, password) VALUES ({username}, {password});"
-    ).format(
-        username=sql.Literal(request_username),
-        password=sql.Literal(hashed_password)
-    ))
-    cur.close()
-    con.close()
-
-    response = make_response(jsonify({
-        "success": True,
-        "message": "Registration successful"}, 200
-    ))
-
-    token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
     
-    generate_cookie(response, token, True)
+    try:
+        register_user_db(request_username, hashed_password)
+    except Exception as e:
+        abort(500, description=f"Database request failed with following error: {e}")
+    else:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Registration successful"}, 200
+        ))
+
+        token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
         
-    return response
+        generate_cookie(response, token, True)
+            
+        return response
 
 @app.route("/auth", methods=['GET'])
 @token_required
