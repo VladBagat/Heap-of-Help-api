@@ -21,12 +21,8 @@ host = getenv('HOST')
 port = getenv('PORT')
 database = getenv('DATABASE')
 
-print(user, password, host, port, database)
 
-
-print("Beofre conn")
 db_conn = Connection(user=user, password=password, host=host, port=port, database=database)
-print("After conn")
 
 @db_conn.with_conn
 def users_table_setup(con : connection):
@@ -58,7 +54,6 @@ def fetch_test(conn : connection):
         query = "SELECT * FROM test"
         cursor.execute(query)
         result = cursor.fetchall()
-        print(result)
 
 if __name__ == "__main__":
     fetch_test()

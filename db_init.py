@@ -5,8 +5,7 @@ class Connection:
     def __init__(self, user, password, host, port, database):
         self.pool = pool.SimpleConnectionPool(
             minconn=1, maxconn=20, user=user, password=password,
-            host=host, port=port, dbname=database)
-        print(f"Pool is {self.pool}")
+            host=host, dbname=database)
 
 
     def with_conn(self, func):
@@ -14,9 +13,7 @@ class Connection:
         def get_conn(*args, **kwargs):
             connection = self.pool.getconn()
             try:
-                print("Before func")
                 result = func(connection, *args, **kwargs)
-                print("After func")
             finally:
                 self.pool.putconn(connection)
             return result
