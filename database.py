@@ -18,11 +18,10 @@ load_dotenv()
 user = getenv('USER')
 password = getenv('PASSWORD')
 host = getenv('HOST')
-port = getenv('PORT')
 database = getenv('DATABASE')
 
 
-db_conn = Connection(user=user, password=password, host=host, port=port, database=database)
+db_conn = Connection(user=user, password=password, host=host, database=database)
 
 @db_conn.with_conn
 def users_table_setup(con : connection):
