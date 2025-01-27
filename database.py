@@ -11,6 +11,9 @@ from os import getenv
 from db_init import Connection
 from psycopg2.extensions import connection
 from psycopg2 import sql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 user = getenv('USER')
 password = getenv('PASSWORD')
