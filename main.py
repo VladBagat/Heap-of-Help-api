@@ -134,5 +134,41 @@ def authorize_user_cookie(user_id):
     
     return response
 
+@app.route("/content", methods=['GET'])
+@token_required
+def fetch_content(user_id):
+    
+    if not user_id:
+        response = make_response(jsonify({
+        "success": False,
+        "message": "Credentials not found",}, 401
+    ))
+        
+    #Runs some recommendation algorithm    
+        
+    #Fetches data from database
+    
+    data = [
+        {"name": "Jonanson Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Senior", "Sigma"]},
+        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Alex Johnson", "description": "A data scientist with expertise in machine learning and artificial intelligence.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Emily Davis", "description": "A software engineer focusing on front-end development with a love for UX/UI design.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Chris Lee", "description": "A product manager with a background in business analysis and project leadership.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Samantha Green", "description": "A creative writer and content strategist with a flair for storytelling.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Alex Johnson", "description": "A data scientist with expertise in machine learning and artificial intelligence.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Emily Davis", "description": "A software engineer focusing on front-end development with a love for UX/UI design.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Chris Lee", "description": "A product manager with a background in business analysis and project leadership.", "tags":["Python", "Senior", "Sigma"]},
+        {"name": "Samantha Green", "description": "A creative writer and content strategist with a flair for storytelling.", "tags":["Python", "Senior", "Sigma"]} 
+    ]
+    
+    response = make_response(jsonify({
+        "success": True,
+        "content": data}, 200
+    ))
+        
+    return response    
+
 if __name__ == "__main__":
     app.run(debug=True)

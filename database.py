@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-user = getenv('USER')
+user = getenv('USER_db')
 password = getenv('PASSWORD')
 host = getenv('HOST')
 database = getenv('DATABASE')
