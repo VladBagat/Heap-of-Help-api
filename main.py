@@ -67,7 +67,7 @@ def authorize_user_credentials():
         if status == 200:
             response = make_response(jsonify({
                 "success": True,
-                "message": "Authorization successful"}, 401
+                "message": "Authorization successful"}, 200
             ))
             if remember:
                 token = generate_jwt({"user_id": request_username,
