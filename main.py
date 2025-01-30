@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, UTC
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db
+from database import register_user_db, login_user_db
 from utils import token_required
 import re
 import bcrypt
@@ -23,7 +23,8 @@ def generate_jwt(payload):
         jwt_secret, 
         algorithm="HS256"
     )
-    
+
+
 def generate_cookie(response, token, remember):
     if remember:
         expires = datetime.now(UTC) + timedelta(days=14)
@@ -50,9 +51,6 @@ def hello_world(current_user):
 
 @app.route("/login", methods=['POST'])
 def authorize_user_credentials():
-    mock_username = "admin"  # Replace with actual DB check
-    mock_password = "111"    # Replace with password hash check
-
     request_username = request.json.get('username')
     request_password = request.json.get('password')
     remember = request.json.get('remember')
@@ -60,26 +58,46 @@ def authorize_user_credentials():
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
 
-    if request_username != mock_username or request_password != mock_password:
-        abort(401, description="User not found")
-
-    
-    response = make_response(jsonify({
-        "success": True,
-        "message": "Authorization successful"}, 200
-    ))
-    
-    if remember:
-        token = generate_jwt({"user_id": request_username, "exp":datetime.now(UTC) + timedelta(days=14)})
-        
-        generate_cookie(response, token, True)
-        
+    try:
+        status = login_user_db(request_username, request_password)
+    except Exception as e:
+        print("Error Occurred")
+        abort(500, description=f"Database request failed with following error: {e}")
     else:
-        token = generate_jwt({"user_id": request_username})
-        
-        generate_cookie(response, token, False)
-        
-    return response
+        if status == 200:
+            response = make_response(jsonify({
+                "success": True,
+                "message": "Authorization successful"}, 401
+            ))
+            if remember:
+                token = generate_jwt({"user_id": request_username,
+                                      "exp": datetime.now(UTC) + timedelta(
+                                          days=14)})
+
+                generate_cookie(response, token, True)
+
+            else:
+                token = generate_jwt({"user_id": request_username})
+
+                generate_cookie(response, token, False)
+
+            return response
+
+        elif status == 401:
+            response = make_response(jsonify({
+                "success": False,
+                "message": "Authorization unsuccessful"}, 401
+            ))
+            return response
+
+        elif status == 404:
+            response = make_response(jsonify({
+                "success": False,
+                "message": "User not found"}, 404
+            ))
+            return response
+
+
 
 
 @app.route("/register", methods=['POST'])
