@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-user = getenv('USER_db')
+user = getenv('USER_DB')
 password = getenv('PASSWORD')
 host = getenv('HOST')
 database = getenv('DATABASE')
@@ -62,9 +62,8 @@ def login_user_db(con: connection, request_username, request_password):
         hashed_pass = cur.fetchone()
         if hashed_pass is None:
             return 404
-        # Not Working
         if bcrypt.checkpw(request_password.encode('utf-8'),
-                          hashed_pass[0]):
+                          hashed_pass[0].encode('utf-8')):
             return 200
         return 401
 

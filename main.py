@@ -114,7 +114,7 @@ def register_user():
     if len(request_password) < 8:
         abort(400, description="Password must be at least 8 characters long")
 
-    hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     try:
         register_user_db(request_username, hashed_password)
