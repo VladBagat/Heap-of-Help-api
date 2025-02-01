@@ -1,0 +1,531 @@
+{
+    "computerScienceHierarchy": [
+      {
+        "name": "Theoretical Computer Science",
+        "subfields": [
+          {
+            "name": "Algorithms",
+            "subfields": [
+              { "name": "Graph Algorithms", "subfields":[] },
+              { "name": "Randomized Algorithms", "subfields":[] },
+              { "name": "Approximation Algorithms", "subfields":[] },
+              { "name": "Parallel Algorithms", "subfields":[] }
+            ]
+          },
+          {
+            "name": "Formal Languages",
+            "subfields": [
+              { "name": "Regular Languages and Finite Automata", "subfields":[] },
+              { "name": "Context-Free Languages and Grammars", "subfields":[] },
+              { "name": "Context-Sensitive Languages", "subfields":[] },
+              { "name": "Parsing and Syntax Analysis", "subfields":[] }
+            ]
+          },
+          {
+            "name": "Cryptography (Theoretical)",
+            "subfields": [
+              { "name": "Public-Key Cryptography", "subfields":[] },
+              { "name": "Zero-Knowledge Proofs", "subfields":[] },
+              { "name": "Lattice-Based Cryptography", "subfields":[] },
+              { "name": "Provable Security", "subfields":[] }
+            ]
+          },
+          {
+            "name": "Quantum Computing Theory",
+            "subfields": [
+              { "name": "Quantum Algorithms", "subfields":[] },
+              { "name": "Quantum Complexity Theory", "subfields":[] },
+              { "name": "Quantum Error Correction", "subfields":[] },
+              { "name": "Quantum Information Theory", "subfields":[] }
+            ]
+          },
+          {
+            "name": "Automata Theory",
+            "subfields": [
+              { "name": "Finite Automata", "subfields":[] },
+              { "name": "Pushdown Automata", "subfields":[] },
+              { "name": "Turing Machines", "subfields":[] },
+              { "name": "Cellular Automata", "subfields":[] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Computer Systems & Architecture",
+        "subfields": [
+          {
+            "name": "Operating Systems",
+            "subfields": [
+              {
+                "name": "Kernel Types",
+                "subfields": [
+                  { "name": "Monolithic", "subfields": [] },
+                  { "name": "Microkernel", "subfields": [] },
+                  { "name": "Hybrid", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Memory Management",
+                "subfields": [
+                  { "name": "Paging", "subfields": [] },
+                  { "name": "Segmentation", "subfields": [] },
+                  { "name": "Garbage Collection", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Process Management",
+                "subfields": [
+                  { "name": "Scheduling Algorithms", "subfields": [] },
+                  { "name": "Concurrency Control", "subfields": [] },
+                  { "name": "Interprocess Communication", "subfields": [] }
+                ]
+              },
+              {
+                "name": "File Systems",
+                "subfields": [
+                  { "name": "FAT", "subfields": [] },
+                  { "name": "NTFS", "subfields": [] },
+                  { "name": "Ext4", "subfields": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Distributed Systems",
+            "subfields": [
+              {
+                "name": "Consensus Algorithms",
+                "subfields": [
+                  { "name": "Raft", "subfields": [] },
+                  { "name": "Paxos", "subfields": [] },
+                  { "name": "Viewstamped Replication", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Fault Tolerance",
+                "subfields": [
+                  { "name": "Replication Strategies", "subfields": [] },
+                  { "name": "Failure Detection", "subfields": [] },
+                  { "name": "Checkpointing", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Distributed File Systems",
+                "subfields": [
+                  { "name": "Hadoop DFS", "subfields": [] },
+                  { "name": "Google File System", "subfields": [] },
+                  { "name": "Ceph", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Peer-to-Peer Networks",
+                "subfields": [
+                  { "name": "BitTorrent", "subfields": [] },
+                  { "name": "Gnutella", "subfields": [] },
+                  { "name": "Kademlia", "subfields": [] }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Computer Hardware/Architectures",
+            "subfields": [
+              {
+                "name": "Instruction Set Architectures (ISA)",
+                "subfields": [
+                  { "name": "x86", "subfields": [] },
+                  { "name": "ARM", "subfields": [] },
+                  { "name": "RISC-V", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Cache Memory Hierarchies",
+                "subfields": [
+                  { "name": "Direct-Mapped", "subfields": [] },
+                  { "name": "Associative", "subfields": [] },
+                  { "name": "Set-Associative", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Parallel and Distributed Processing",
+                "subfields": [
+                  { "name": "Flynn's Taxonomy", "subfields": [] },
+                  { "name": "SIMD Architectures", "subfields": [] },
+                  { "name": "MIMD Architectures", "subfields": [] }
+                ]
+              },
+              {
+                "name": "Embedded Systems Design",
+                "subfields": [
+                  { "name": "Real-Time Operating Systems", "subfields": [] },
+                  { "name": "System-on-Chip (SoC)", "subfields": [] },
+                  { "name": "FPGA-based Design", "subfields": [] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Artificial Intelligence & Machine Learning",
+        "subfields": [
+          {
+            "name": "Neural Networks",
+            "subfields": [
+              { "name": "Convolutional Neural Networks (CNNs)", "subfields": []},
+              { "name": "Recurrent Neural Networks (RNNs)", "subfields": [] },
+              { "name": "Generative Adversarial Networks (GANs)", "subfields": []}
+            ]
+          },
+          {
+            "name": "Natural Language Processing (NLP)",
+            "subfields": [
+              { "name": "Sentiment Analysis", "subfields": []},
+              { "name": "Machine Translation", "subfields": []},
+              { "name": "Named Entity Recognition", "subfields": []}
+            ]
+          },
+          {
+            "name": "Reinforcement Learning",
+            "subfields": [
+              { "name": "Q-Learning", "subfields": []},
+              { "name": "Policy Gradient Methods", "subfields": []},
+              { "name": "Deep Reinforcement Learning", "subfields": []}
+            ]
+          },
+          {
+            "name": "Computer Vision",
+            "subfields": [
+              { "name": "Image Classification", "subfields": []},
+              { "name": "Object Detection", "subfields": []},
+              { "name": "Image Segmentation", "subfields": []}
+            ]
+          },
+          {
+            "name": "Robotics",
+            "subfields": [
+              { "name": "Motion Planning", "subfields": []},
+              { "name": "Robot Perception", "subfields": []},
+              { "name": "Human-Robot Interaction", "subfields": []}
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Software Engineering",
+        "subfields": [
+          {
+            "name": "Software Design Patterns",
+            "subfields": [
+              { "name": "Creational Patterns", "subfields": [] },
+              { "name": "Structural Patterns", "subfields": [] },
+              { "name": "Behavioral Patterns", "subfields": [] }
+            ]
+          },
+          {
+            "name": "DevOps",
+            "subfields": [
+              { "name": "Continuous Integration", "subfields": [] },
+              { "name": "Continuous Deployment", "subfields": [] },
+              { "name": "Infrastructure as Code", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Agile Methodology",
+            "subfields": [
+              { "name": "Scrum", "subfields": [] },
+              { "name": "Kanban", "subfields": [] },
+              { "name": "Extreme Programming", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Quality Assurance",
+            "subfields": [
+              { "name": "Static Analysis", "subfields": [] },
+              { "name": "Performance Testing", "subfields": [] },
+              { "name": "Security Testing", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Software Testing",
+            "subfields": [
+              { "name": "Unit Testing", "subfields": [] },
+              { "name": "Integration Testing", "subfields": [] },
+              { "name": "System Testing", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Data Science & Databases",
+        "subfields": [
+          {
+            "name": "Database Systems",
+            "subfields": [
+              { "name": "Relational Databases", "subfields": [] },
+              { "name": "NoSQL Databases", "subfields": [] },
+              { "name": "Distributed Databases", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Big Data Analytics",
+            "subfields": [
+              { "name": "MapReduce & Spark", "subfields": [] },
+              { "name": "Data Warehousing", "subfields": [] },
+              { "name": "Real-Time Analytics", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Data Mining",
+            "subfields": [
+              { "name": "Clustering", "subfields": [] },
+              { "name": "Classification", "subfields": [] },
+              { "name": "Anomaly Detection", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Information Retrieval",
+            "subfields": [
+              { "name": "Search Engine Algorithms", "subfields": [] },
+              { "name": "Text Mining", "subfields": [] },
+              { "name": "Relevance Ranking", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Data Visualization",
+            "subfields": [
+              { "name": "Interactive Visualization", "subfields": [] },
+              { "name": "Statistical Graphics", "subfields": [] },
+              { "name": "Geospatial Visualization", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Networking & Communications",
+        "subfields": [
+          {
+            "name": "Internet Protocols (TCP/IP)",
+            "subfields": [
+              { "name": "Routing Protocols", "subfields": [] },
+              { "name": "Transport Protocols", "subfields": [] },
+              { "name": "Application Layer Protocols", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Cloud Computing",
+            "subfields": [
+              { "name": "Infrastructure as a Service (IaaS)", "subfields": [] },
+              { "name": "Platform as a Service (PaaS)", "subfields": [] },
+              { "name": "Software as a Service (SaaS)", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Wireless Networks",
+            "subfields": [
+              { "name": "WiFi", "subfields": [] },
+              { "name": "Cellular Networks", "subfields": [] },
+              { "name": "Ad Hoc Networks", "subfields": [] }
+            ]
+          },
+          {
+            "name": "IoT Systems",
+            "subfields": [
+              { "name": "Edge Computing", "subfields": [] },
+              { "name": "Sensor Networks", "subfields": [] },
+              { "name": "IoT Protocols", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Network Security",
+            "subfields": [
+              { "name": "Encryption Techniques", "subfields": [] },
+              { "name": "Intrusion Detection Systems", "subfields": [] },
+              { "name": "Firewall Technologies", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Cybersecurity & Privacy",
+        "subfields": [
+          {
+            "name": "Applied Cryptography",
+            "subfields": [
+              { "name": "Symmetric Cryptography", "subfields": [] },
+              { "name": "Asymmetric Cryptography", "subfields": [] },
+              { "name": "Cryptographic Hash Functions", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Ethical Hacking",
+            "subfields": [
+              { "name": "Penetration Testing", "subfields": [] },
+              { "name": "Vulnerability Assessment", "subfields": [] },
+              { "name": "Social Engineering", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Digital Forensics",
+            "subfields": [
+              { "name": "Computer Forensics", "subfields": [] },
+              { "name": "Network Forensics", "subfields": [] },
+              { "name": "Mobile Device Forensics", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Blockchain Security",
+            "subfields": [
+              { "name": "Smart Contract Auditing", "subfields": [] },
+              { "name": "Consensus Mechanism Security", "subfields": [] },
+              { "name": "Cryptocurrency Security", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Privacy Engineering",
+            "subfields": [
+              { "name": "Data Anonymization", "subfields": [] },
+              { "name": "Access Control Mechanisms", "subfields": [] },
+              { "name": "Privacy by Design", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Human-Computer Interaction (HCI)",
+        "subfields": [
+          {
+            "name": "UX/UI Design",
+            "subfields": [
+              { "name": "Interaction Design", "subfields": [] },
+              { "name": "Visual Design", "subfields": [] },
+              { "name": "Information Architecture", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Accessibility",
+            "subfields": [
+              { "name": "Screen Readers", "subfields": [] },
+              { "name": "Keyboard Navigation", "subfields": [] },
+              { "name": "Assistive Technologies", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Virtual Reality (VR)",
+            "subfields": [
+              { "name": "Immersive Environment Design", "subfields": [] },
+              { "name": "VR Interaction Techniques", "subfields": [] },
+              { "name": "Motion Tracking", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Usability Testing",
+            "subfields": [
+              { "name": "User Interviews & Surveys", "subfields": [] },
+              { "name": "A/B Testing", "subfields": [] },
+              { "name": "Heuristic Evaluation", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Augmented Reality (AR)",
+            "subfields": [
+              { "name": "Marker-Based AR", "subfields": [] },
+              { "name": "Markerless AR", "subfields": [] },
+              { "name": "Spatial Mapping", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Computer Graphics & Visualization",
+        "subfields": [
+          {
+            "name": "3D Graphics Rendering",
+            "subfields": [
+              { "name": "Ray Tracing", "subfields": [] },
+              { "name": "Rasterization", "subfields": [] },
+              { "name": "Physically Based Rendering", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Animation",
+            "subfields": [
+              { "name": "Keyframe Animation", "subfields": [] },
+              { "name": "Procedural Animation", "subfields": [] },
+              { "name": "Motion Capture", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Scientific Visualization",
+            "subfields": [
+              { "name": "Volume Rendering", "subfields": [] },
+              { "name": "Data Mapping", "subfields": [] },
+              { "name": "Simulation Visualization", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Game Engine Development",
+            "subfields": [
+              { "name": "Real-Time Rendering", "subfields": [] },
+              { "name": "Physics Simulation", "subfields": [] },
+              { "name": "Scripting and AI Integration", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Geometric Modeling",
+            "subfields": [
+              { "name": "Mesh Generation", "subfields": [] },
+              { "name": "Surface Reconstruction", "subfields": [] },
+              { "name": "Parametric Modeling", "subfields": [] }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Programming Languages & Compilers",
+        "subfields": [
+          {
+            "name": "Programming Language Theory",
+            "subfields": [
+              { "name": "Operational Semantics", "subfields": [] },
+              { "name": "Denotational Semantics", "subfields": [] },
+              { "name": "Axiomatic Semantics", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Compiler Design",
+            "subfields": [
+              { "name": "Lexical Analysis", "subfields": [] },
+              { "name": "Parsing Techniques", "subfields": [] },
+              { "name": "Code Optimization", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Type Systems",
+            "subfields": [
+              { "name": "Static Typing", "subfields": [] },
+              { "name": "Dynamic Typing", "subfields": [] },
+              { "name": "Type Inference", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Concurrency Models",
+            "subfields": [
+              { "name": "Thread-based Concurrency", "subfields": [] },
+              { "name": "Message Passing", "subfields": [] },
+              { "name": "Actor Model", "subfields": [] }
+            ]
+          },
+          {
+            "name": "Functional Programming",
+            "subfields": [
+              { "name": "Immutable Data Structures", "subfields": [] },
+              { "name": "Higher-Order Functions", "subfields": [] },
+              { "name": "Lazy Evaluation", "subfields": [] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  
