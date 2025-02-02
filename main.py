@@ -4,13 +4,25 @@ import jwt
 from datetime import datetime, timedelta, UTC
 from dotenv import load_dotenv
 from os import getenv
-
-from database import register_user_db
-from utils import token_required
 import re
 import bcrypt
 
+from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items
+from utils import token_required
+from ranking import RankingAlgorithm
+from Ranking.lookup_table import LookupTableGenerator
+
+
 app = Flask(__name__)
+
+#TODO : This area will be substitues with __init__ when we will move this to a class. 
+ra = RankingAlgorithm()
+LookupTableGenerator().generate_lookup_table()
+#DATABASE SETUP
+items_table_setup()
+users_table_setup()
+tags_table_setup()  
+
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
 load_dotenv()
@@ -108,7 +120,7 @@ def register_user():
             "message": "Registration successful"}, 200
         ))
 
-        token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
+        token = generate_jwt({"user_id": request_username, "exp":datetime.now(UTC) + timedelta(days=14)})
         
         generate_cookie(response, token, True)
             
@@ -143,31 +155,33 @@ def fetch_content(user_id):
         "success": False,
         "message": "Credentials not found",}, 401
     ))
-        
-    #Runs some recommendation algorithm    
-        
-    #Fetches data from database
+          
+    user_tags = list(fetch_user_tags(user_id))[0]
+    user_tags = [tag for tag in user_tags if tag is not None]
+    item_tags_list = fetch_item_tags()
     
-    data = [
-        {"name": "Jonanson Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Senior", "Sigma"]},
-        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Alex Johnson", "description": "A data scientist with expertise in machine learning and artificial intelligence.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Emily Davis", "description": "A software engineer focusing on front-end development with a love for UX/UI design.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Chris Lee", "description": "A product manager with a background in business analysis and project leadership.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Samantha Green", "description": "A creative writer and content strategist with a flair for storytelling.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Jane Smith", "description": "A passionate graphic designer specializing in digital art and branding.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Alex Johnson", "description": "A data scientist with expertise in machine learning and artificial intelligence.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Emily Davis", "description": "A software engineer focusing on front-end development with a love for UX/UI design.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Chris Lee", "description": "A product manager with a background in business analysis and project leadership.", "tags":["Python", "Senior", "Sigma"]},
-        {"name": "Samantha Green", "description": "A creative writer and content strategist with a flair for storytelling.", "tags":["Python", "Senior", "Sigma"]} 
-    ]
+    item_tags_dict = {}
+    
+    result_dict = {}
+    
+    for item in item_tags_list:
+        item_tags_dict.update({item[1]: list(item[1:])})
+        
+    for key, value in item_tags_dict.items():
+        value = [tag for tag in value if tag is not None]
+        result_dict.update({key: ra.calculate_content_score(user_tags, value)})
+            
+    results = [key for key, value in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
+        
+    items = fetch_recommended_items(results)
+    
     
     response = make_response(jsonify({
         "success": True,
-        "content": data}, 200
-    ))
-        
+        "message": f"Fetched {len(items)} items",
+        "content": items}, 200)
+    )
+            
     return response    
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ class GraphSearcher:
             raise TypeError("Input must be a dictionary")
         self.__graph = input
         
-    def __traverse_up(self, user : str, item : str):  
+    def __traverse_up(self, user : int, item : int):  
         user : Node = self.__graph[user]
         item : Node = self.__graph[item]
             
@@ -42,7 +42,7 @@ class GraphSearcher:
         
         return None
             
-    def __traverse_down(self, user : str, item : str):
+    def __traverse_down(self, user : int, item : int):
         user : Node = self.__graph[user]
         item : Node = self.__graph[item]
         
@@ -65,7 +65,7 @@ class GraphSearcher:
                 
         return None 
     
-    def rank(self, user : str, item : str):
+    def rank(self, user : int, item : int):
         result = self.__traverse_up(user, item)
         
         if not result:
