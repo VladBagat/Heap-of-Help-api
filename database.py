@@ -73,7 +73,7 @@ def login_user_db(con: connection, request_username, request_password):
 @db_conn.with_conn
 def fetch_test(conn : connection):
     with conn.cursor() as cursor:
-        query = "SELECT * FROM test"
+        query = "SELECT * FROM users;"
         cursor.execute(query)
         result = cursor.fetchall()
 

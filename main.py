@@ -67,12 +67,12 @@ def authorize_user_credentials():
         if status == 200:
             response = make_response(jsonify({
                 "success": True,
-                "message": "Authorization successful"}, 200
+                "message": "Authorisation successful"}, 200
             ))
             if remember:
                 token = generate_jwt({"user_id": request_username,
-                                      "exp": datetime.now(UTC) + timedelta(
-                                          days=14)})
+                                  "exp": datetime.now(UTC) + timedelta(
+                                      days=14)})
 
                 generate_cookie(response, token, True)
 
@@ -108,7 +108,7 @@ def register_user():
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
 
-    if not re.match(r'^[a-zA-Z0-9\s]*$', request_username):
+    if not re.match(r'^[a-zA-Z0-9_\-@\.!#$%&*+=()\[\]{}|:,?~£¥]*$',request_username):
         abort(400, description="Username Invalid")
 
     if len(request_password) < 8:
@@ -126,7 +126,7 @@ def register_user():
             "message": "Registration successful"}, 200
         ))
 
-        token = generate_jwt({"user_id": 1, "exp":datetime.now(UTC) + timedelta(days=14)})
+        token = generate_jwt({"user_id": request_username, "exp": datetime.now(UTC) + timedelta(days=14)})
         
         generate_cookie(response, token, True)
             
