@@ -117,14 +117,21 @@ def register_user():
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     try:
-        register_user_db(request_username, hashed_password)
+        success = register_user_db(request_username, hashed_password)
+        print(success)
     except Exception as e:
         abort(500, description=f"Database request failed with following error: {e}")
     else:
-        response = make_response(jsonify({
-            "success": True,
-            "message": "Registration successful"}, 200
-        ))
+        if success:
+            response = make_response(jsonify({
+                "success": True,
+                "message": "Registration successful"}, 200
+            ))
+        else:
+            response = make_response(jsonify({
+                "success": False,
+                "message": "Registration unsuccessful, username already exists"}, 403
+            ))
 
         token = generate_jwt({"user_id": request_username, "exp": datetime.now(UTC) + timedelta(days=14)})
         

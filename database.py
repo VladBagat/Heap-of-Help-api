@@ -11,7 +11,7 @@ We have at most 20 connections! Consult db_init.py for details.
 from os import getenv
 from db_init import Connection
 from psycopg2.extensions import connection
-from psycopg2 import sql
+from psycopg2 import sql, errors
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,7 +28,7 @@ db_conn = Connection(user=user, password=password, host=host, database=database)
 def users_table_setup(con : connection):
     with con.cursor() as cur:
         cur.execute('CREATE TABLE IF NOT EXISTS users (id serial PRIMARY KEY,'
-                    'username varchar (150) NOT NULL,'
+                    'username varchar (150) NOT NULL UNIQUE,'
                     'password TEXT NOT NULL,'
                     'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'
                     )
@@ -40,14 +40,20 @@ def users_table_setup(con : connection):
 @db_conn.with_conn 
 def register_user_db(con : connection, request_username, hashed_password):
     with con.cursor() as cur:
-        cur.execute(sql.SQL(
-            "INSERT INTO users (username, password) VALUES ({username}, {password});"
-        ).format(
-            username=sql.Literal(request_username),
-            password=sql.Literal(hashed_password)
-        ))
-        
-        con.commit()
+        # Error for Unique field violation
+        UserExists = errors.lookup('23505')
+        try:
+            cur.execute(sql.SQL(
+                "INSERT INTO users (username, password) VALUES ({username}, {password});"
+            ).format(
+                username=sql.Literal(request_username),
+                password=sql.Literal(hashed_password)
+            ))
+        except UserExists:
+            return False
+        else:
+            con.commit()
+            return True
 
 
 @db_conn.with_conn
