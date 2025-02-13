@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, abort, make_response
 from flask_cors import CORS
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
@@ -27,7 +27,7 @@ def generate_jwt(payload):
 
 def generate_cookie(response, token, remember):
     if remember:
-        expires = datetime.now(datetime.UTC) + timedelta(days=14)
+        expires = datetime.now(timezone.utc) + timedelta(days=14)
     else:
         expires = None
     
@@ -71,7 +71,7 @@ def authorize_user_credentials():
             ))
             if remember:
                 token = generate_jwt({"user_id": request_username,
-                                  "exp": datetime.now(datetime.UTC) + timedelta(
+                                  "exp": datetime.now(timezone.utc) + timedelta(
                                       days=14)})
 
                 generate_cookie(response, token, True)
@@ -98,6 +98,14 @@ def authorize_user_credentials():
             return response
 
 
+@app.route("/logout", methods=['POST'])
+def logout():
+    response = make_response(jsonify({
+        "success": True,
+        "message": "Logged out successfully"
+    }))
+    response.set_cookie("auth_token", "", expires=0)  # Clear the cookie
+    return response
 
 
 @app.route("/register", methods=['POST'])
@@ -132,7 +140,7 @@ def register_user():
                 "message": "Registration unsuccessful, username already exists"}, 403
             ))
 
-        token = generate_jwt({"user_id": request_username, "exp": datetime.now(datetime.UTC) + timedelta(days=14)})
+        token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
         
         generate_cookie(response, token, True)
             
