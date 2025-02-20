@@ -47,6 +47,23 @@ def generate_cookie(response, token, remember):
 def hello_world(current_user):
     return "<p>Hello, World!</p>"
 
+@app.route("/pageowner", methods=['POST'])
+@token_required
+def check_owner(current_user):
+    if current_user == request.json.get('username'):
+        response = make_response(jsonify({
+            "success": True,
+            "message": "User is owner"}, 200
+    ))
+
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "User is not owner"}, 401
+    ))
+ 
+    return response
+
 
 @app.route("/login", methods=['POST'])
 def authorize_user_credentials():
@@ -135,4 +152,4 @@ def authorize_user_cookie(user_id):
     return response
 
 if __name__ == "__main__":
-    app.run(port=8000, debug=True)
+    app.run(debug=True)
