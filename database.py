@@ -32,8 +32,6 @@ def users_table_setup(con : connection):
                     'password TEXT NOT NULL,'
                     'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'
                     )
-        cur.execute("INSERT INTO users (username, password) "
-                    "VALUES ('TEST', 'test');")
         con.commit()
         
 @db_conn.with_conn
