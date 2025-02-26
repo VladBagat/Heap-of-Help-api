@@ -84,6 +84,22 @@ def login_user_db(con: connection, request_username, request_password):
             return 200
         return 401
 
+@db_conn.with_conn
+def update_user_profile(con: connection, user_id, profile_image, location, description, tags, rating):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            "UPDATE users SET profile_image = {profile_image}, location = {location}, "
+            "description = {description}, tags = {tags}, rating = {rating} "
+            "WHERE id = {user_id};"
+        ).format(
+            profile_image=sql.Literal(profile_image),
+            location=sql.Literal(location),
+            description=sql.Literal(description),
+            tags=sql.Literal(tags),
+            rating=sql.Literal(rating),
+            user_id=sql.Literal(user_id)
+        ))
+        con.commit()
 
 
 

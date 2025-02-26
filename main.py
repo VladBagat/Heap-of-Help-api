@@ -4,10 +4,12 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
+from werkzeug.utils import secure_filename
 
 from database import register_user_db, login_user_db
 from utils import token_required
 import re
+import os
 import bcrypt
 
 app = Flask(__name__)
@@ -165,6 +167,8 @@ def authorize_user_cookie(user_id):
     ))
     
     return response
+
+
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
