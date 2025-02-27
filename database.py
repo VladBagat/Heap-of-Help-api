@@ -13,6 +13,7 @@ from db_init import Connection
 from psycopg2.extensions import connection
 from psycopg2 import sql, errors
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 
@@ -73,8 +74,47 @@ def login_user_db(con: connection, request_username, request_password):
             return 200
         return 401
 
+@db_conn.with_conn
+def tutees_table_setup(con : connection):
+    with con.cursor() as cur:
+        cur.execute('CREATE TABLE IF NOT EXISTS tutees (tutee_id serial PRIMARY KEY,'
+                    'first_name varchar (150) NOT NULL,'
+                    'last_name varchar (150) NOT NULL,'
+                    'description TEXT NOT NULL,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE,'
+                    'profile_img BYTEA);'
+                    )
+        
+        """Save an image to the database in BYTEA format."""
+        with open("default_img.jpg", 'rb') as file:
+            binary_data = file.read()  # Read image as binary
 
-
+        cur.execute("""
+        INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
+        VALUES (%s, %s, %s, %s, %s)
+    """, ("Test", "test", "Hi", 234, binary_data))
+        
+        con.commit()
+        con.close()
+        
+@db_conn.with_conn
+def get_tutee_profile(con : connection):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            'SELECT first_name, last_name, description, profile_img FROM tutees WHERE tutee_id={tutee_id};'
+            ).format(
+            tutee_id=sql.Literal(34),
+            ))
+        tutee_data = cur.fetchone()
+        if tutee_data:
+            return {
+                "first_name": tutee_data[0],
+                "last_name": tutee_data[1],
+                "description": tutee_data[2],
+                "profile_img": base64.b64encode(tutee_data[3]).decode('utf-8')  # This is in BYTEA format
+            }
+        else:
+            return None  # No data found
 
 @db_conn.with_conn
 def fetch_test(conn : connection):

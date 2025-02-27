@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db, login_user_db
+from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup
 from utils import token_required
 import re
 import bcrypt
@@ -180,6 +180,24 @@ def authorize_user_cookie(user_id):
         "message": "Authorization successful",
         "user_id": user_id}, 200
     ))
+    
+    return response
+
+@app.route('/get_tutee_profile', methods=['GET'])
+def get_tutee():
+    tutee_profile = get_tutee_profile()
+
+    if tutee_profile:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Tutee profile found",
+            "data": tutee_profile
+        }), 200)
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Tutee profile not found"
+        }), 401)
     
     return response
 
