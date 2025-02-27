@@ -115,6 +115,45 @@ def get_tutee_profile(con : connection):
             }
         else:
             return None  # No data found
+        
+@db_conn.with_conn
+def get_tutor_profile(con : connection):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            'SELECT first_name, last_name, description, profile_img FROM tutors WHERE tutor_id={tutor_id};'
+            ).format(
+            tutor_id=sql.Literal(1),
+            ))
+        tutor_data = cur.fetchone()
+        if tutor_data:
+            return {
+                "first_name": tutor_data[0],
+                "last_name": tutor_data[1],
+                "description": tutor_data[2],
+                "profile_img": base64.b64encode(tutor_data[3]).decode('utf-8')  # This is in BYTEA format
+            }
+        else:
+            return None  # No data found
+
+@db_conn.with_conn
+def is_tutor(con : connection, request_username):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            "SELECT id FROM users WHERE username={username};"
+            ).format(
+            username=sql.Literal(request_username),
+            ))
+        user_id = cur.fetchone()
+        cur.execute(sql.SQL(
+            "SELECT tutor_id FROM tutors WHERE id={id};"
+            ).format(
+            id=sql.Literal(user_id),
+            ))
+        tutor_id = cur.fetchone()
+        if tutor_id is None:
+            return False
+        else:
+            return True
 
 @db_conn.with_conn
 def fetch_test(conn : connection):

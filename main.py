@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup
+from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile
 from utils import token_required
 import re
 import bcrypt
@@ -82,10 +82,13 @@ def authorize_user_credentials():
         abort(500, description=f"Database request failed with following error: {e}")
     else:
         if status == 200:
+            tutor = is_tutor(request_username)
             response = make_response(jsonify({
                 "success": True,
-                "message": "Authorisation successful"}, 200
-            ))
+                "message": "Authorisation successful",
+                "isTutor": tutor,
+                "username": request_username
+            }, 200))
             if remember:
                 token = generate_jwt({"user_id": request_username,
                                   "exp": datetime.now(timezone.utc) + timedelta(
@@ -97,7 +100,7 @@ def authorize_user_credentials():
                 token = generate_jwt({"user_id": request_username})
 
                 generate_cookie(response, token, False)
-
+                
             return response
 
         elif status == 401:
@@ -171,15 +174,15 @@ def authorize_user_cookie(user_id):
     
     if not user_id:
         response = make_response(jsonify({
-        "success": False,
-        "message": "Credentials not found",}, 401
-    ))
-    
-    response = make_response(jsonify({
-        "success": True,
-        "message": "Authorization successful",
-        "user_id": user_id}, 200
-    ))
+            "success": False,
+            "message": "Credentials not found",}, 401
+        ))
+    else:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Authorization successful",
+            "user_id": user_id}, 200
+        ))
     
     return response
 
@@ -192,6 +195,25 @@ def get_tutee():
             "success": True,
             "message": "Tutee profile found",
             "data": tutee_profile
+        }), 200)
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Tutee profile not found"
+        }), 401)
+    
+    return response
+
+
+@app.route('/get_tutor_profile', methods=['GET'])
+def get_tutor():
+    tutor_profile = get_tutor_profile()
+
+    if tutor_profile:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Tutee profile found",
+            "data": tutor_profile
         }), 200)
     else:
         response = make_response(jsonify({
