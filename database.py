@@ -14,6 +14,7 @@ from psycopg2.extensions import connection
 from psycopg2 import sql, errors
 from psycopg2.extras import execute_values
 from dotenv import load_dotenv
+import base64
 
 load_dotenv()
 
@@ -114,8 +115,88 @@ def fetch_item_tags(conn : connection):
         cur.execute(sql.SQL("SELECT * FROM item_tags ORDER BY RANDOM() LIMIT 100;"))
         return cur.fetchall()
 
+@db_conn.with_conn
+def tutees_table_setup(con : connection):
+    with con.cursor() as cur:
+        cur.execute('CREATE TABLE IF NOT EXISTS tutees (tutee_id serial PRIMARY KEY,'
+                    'first_name varchar (150) NOT NULL,'
+                    'last_name varchar (150) NOT NULL,'
+                    'description TEXT NOT NULL,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE,'
+                    'profile_img BYTEA);'
+                    )
+        
+        """Save an image to the database in BYTEA format."""
+        with open("default_img.jpg", 'rb') as file:
+            binary_data = file.read()  # Read image as binary
+
+        cur.execute("""
+        INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
+        VALUES (%s, %s, %s, %s, %s)
+    """, ("Test", "test", "Hi", 234, binary_data))
+        
+        con.commit()
+        con.close()
+        
+@db_conn.with_conn
+def get_tutee_profile(con : connection):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            'SELECT first_name, last_name, description, profile_img FROM tutees WHERE tutee_id={tutee_id};'
+            ).format(
+            tutee_id=sql.Literal(34),
+            ))
+        tutee_data = cur.fetchone()
+        if tutee_data:
+            return {
+                "first_name": tutee_data[0],
+                "last_name": tutee_data[1],
+                "description": tutee_data[2],
+                "profile_img": base64.b64encode(tutee_data[3]).decode('utf-8')  # This is in BYTEA format
+            }
+        else:
+            return None  # No data found
+        
+@db_conn.with_conn
+def get_tutor_profile(con : connection):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            'SELECT first_name, last_name, description, profile_img FROM tutors WHERE tutor_id={tutor_id};'
+            ).format(
+            tutor_id=sql.Literal(1),
+            ))
+        tutor_data = cur.fetchone()
+        if tutor_data:
+            return {
+                "first_name": tutor_data[0],
+                "last_name": tutor_data[1],
+                "description": tutor_data[2],
+                "profile_img": base64.b64encode(tutor_data[3]).decode('utf-8')  # This is in BYTEA format
+            }
+        else:
+            return None  # No data found
 
 @db_conn.with_conn
+
+def is_tutor(con : connection, request_username):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL(
+            "SELECT id FROM users WHERE username={username};"
+            ).format(
+            username=sql.Literal(request_username),
+            ))
+        user_id = cur.fetchone()
+        cur.execute(sql.SQL(
+            "SELECT tutor_id FROM tutors WHERE id={id};"
+            ).format(
+            id=sql.Literal(user_id),
+            ))
+        tutor_id = cur.fetchone()
+        if tutor_id is None:
+            return False
+        else:
+            return True
+
 def fetch_user_tags(conn : connection, user_id):
     with conn.cursor() as cur:
         cur.execute(sql.SQL(
@@ -137,7 +218,6 @@ def fetch_recommended_items(conn : connection, item_id_list : list):
         WHERE items.id IN %s;"""
         execute_values(cur, query, (tuple(item_id_list),))
         return cur.fetchall()
-    
 
 @db_conn.with_conn
 def fetch_test(conn : connection):
