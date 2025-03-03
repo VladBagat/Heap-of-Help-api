@@ -37,3 +37,10 @@ class LookupTableGenerator:
 
         with open("lookup.json", "w") as out_file:
             json.dump(result, out_file, indent=4)
+            
+    @staticmethod
+    def convert_int_to_tag(tags):
+        """Converts an integer to a tag"""
+        with open("lookup.json", "r") as out_file:
+            lookup_table = json.load(out_file)
+        return [list(lookup_table.keys())[list(lookup_table.values()).index(tag)] for tag in tags]
