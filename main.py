@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile
+from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup
 from utils import token_required
 import re
 import bcrypt
@@ -54,7 +54,6 @@ def generate_cookie(response, token, remember):
         samesite="None", #TODO: Evaluate effect of this on security. 
         expires=expires
         )
-    
     return response
 
 
@@ -277,4 +276,5 @@ def fetch_content(user_id):
     return response    
 
 if __name__ == "__main__":
+    tutors_table_setup()
     app.run(port=8000, debug=True)

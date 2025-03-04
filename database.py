@@ -118,14 +118,21 @@ def fetch_item_tags(conn : connection):
 @db_conn.with_conn
 def tutees_table_setup(con : connection):
     with con.cursor() as cur:
+        # cur.execute('DROP TABLE tutees;')
         cur.execute('CREATE TABLE IF NOT EXISTS tutees (tutee_id serial PRIMARY KEY,'
-                    'first_name varchar (150) NOT NULL,'
-                    'last_name varchar (150) NOT NULL,'
-                    'description TEXT NOT NULL,'
-                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE,'
-                    'profile_img BYTEA);'
+                    'forename varchar (150) NOT NULL,'
+                    'surname varchar (150) NOT NULL,'
+                    'email varchar (255) NOT NULL,'
+                    'age INT,'
+                    'education TEXT,'
+                    'language TEXT,'
+                    'timezone TEXT,'
+                    'profile_img BYTEA,'
+                    'description TEXT,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE);'
                     )
         
+        '''
         """Save an image to the database in BYTEA format."""
         with open("default_img.jpg", 'rb') as file:
             binary_data = file.read()  # Read image as binary
@@ -134,10 +141,42 @@ def tutees_table_setup(con : connection):
         INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
         VALUES (%s, %s, %s, %s, %s)
     """, ("Test", "test", "Hi", 234, binary_data))
+        '''
         
         con.commit()
         con.close()
         
+@db_conn.with_conn
+def tutors_table_setup(con : connection):
+    with con.cursor() as cur:
+        cur.execute('DROP TABLE tutors;')
+        cur.execute('CREATE TABLE IF NOT EXISTS tutors (tutor_id serial PRIMARY KEY,'
+                    'forename varchar (150) NOT NULL,'
+                    'surname varchar (150) NOT NULL,'
+                    'email varchar (255) NOT NULL,'
+                    'age INT,'
+                    'education TEXT,'
+                    'language TEXT,'
+                    'timezone TEXT,'
+                    'profile_img BYTEA,'
+                    'description TEXT,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE);'
+                    )
+        
+        '''
+        """Save an image to the database in BYTEA format."""
+        with open("default_img.jpg", 'rb') as file:
+            binary_data = file.read()  # Read image as binary
+
+        cur.execute("""
+        INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
+        VALUES (%s, %s, %s, %s, %s)
+    """, ("Test", "test", "Hi", 234, binary_data))
+        '''
+        
+        con.commit()
+        con.close()
+
 @db_conn.with_conn
 def get_tutee_profile(con : connection):
     with con.cursor() as cur:
@@ -177,7 +216,6 @@ def get_tutor_profile(con : connection):
             return None  # No data found
 
 @db_conn.with_conn
-
 def is_tutor(con : connection, request_username):
     with con.cursor() as cur:
         cur.execute(sql.SQL(
