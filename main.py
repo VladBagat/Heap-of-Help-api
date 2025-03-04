@@ -81,11 +81,19 @@ def authorize_user_credentials():
         
     return response
 
-
-@app.route("/register", methods=['POST'])
+@app.route("/registration", methods=['POST'])
 def register_user():
+    request_profile = request.json.get('profile')
     request_username = request.json.get('username')
     request_password = request.json.get('password')
+    request_forename = request.json.get('forename')
+    request_surname = request.json.get('surname')
+    request_age = request.json.get('age')
+    request_email = request.json.get('email')
+    request_language = request.json.get('language')
+    request_timezone = request.json.get('timezone')
+    request_description = request.json.get('description')
+
     # Server-side validation
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
@@ -113,6 +121,7 @@ def register_user():
         generate_cookie(response, token, True)
             
         return response
+
 
 @app.route("/auth", methods=['GET'])
 @token_required
