@@ -90,6 +90,68 @@ def register_user_db(con : connection, request_username, hashed_password):
         else:
             con.commit()
             return True
+        
+@db_conn.with_conn 
+def register_tutor(con : connection, request_username, hashed_password, 
+                   request_forename, request_surname, request_email, request_age,
+                   request_language, request_timezone, request_description,
+                   request_education, request_profile_img):
+    with con.cursor() as cur:
+        # Error for Unique field violation
+        UserExists = errors.lookup('23505')
+        
+        try:
+            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
+            (request_username, hashed_password))
+            user_id = cur.fetchone()[0]  # Get the user ID directly
+
+            if request_profile_img:
+                binary_img = base64.b64decode(request_profile_img.split(",")[1])  # Decode Base64
+            else:
+                with open("default_img.jpg", "rb") as file:
+                    binary_img = file.read()  # Default image
+
+            cur.execute("INSERT INTO tutors (forename, surname, email, age, education, language, timezone, profile_img, description, id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+            (request_forename, request_surname, request_email, request_age,
+             request_education, request_language, request_timezone, binary_img,
+             request_description, user_id))
+
+        except UserExists:
+            return False
+        else:
+            con.commit()
+            return True
+        
+@db_conn.with_conn 
+def register_tutee(con : connection, request_username, hashed_password, 
+                   request_forename, request_surname, request_email, request_age,
+                   request_language, request_timezone, request_description,
+                   request_education, request_profile_img):
+    with con.cursor() as cur:
+        # Error for Unique field violation
+        UserExists = errors.lookup('23505')
+        
+        try:
+            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
+            (request_username, hashed_password))
+            user_id = cur.fetchone()[0]  # Get the user ID directly
+
+            if request_profile_img:
+                binary_img = base64.b64decode(request_profile_img.split(",")[1])  # Decode Base64
+            else:
+                with open("default_img.jpg", "rb") as file:
+                    binary_img = file.read()  # Default image
+
+            cur.execute("INSERT INTO tutees (forename, surname, email, age, education, language, timezone, profile_img, description, id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+            (request_forename, request_surname, request_email, request_age,
+             request_education, request_language, request_timezone, binary_img,
+             request_description, user_id))
+
+        except UserExists:
+            return False
+        else:
+            con.commit()
+            return True
 
 
 @db_conn.with_conn
@@ -149,7 +211,7 @@ def tutees_table_setup(con : connection):
 @db_conn.with_conn
 def tutors_table_setup(con : connection):
     with con.cursor() as cur:
-        cur.execute('DROP TABLE tutors;')
+        #cur.execute('DROP TABLE tutors;')
         cur.execute('CREATE TABLE IF NOT EXISTS tutors (tutor_id serial PRIMARY KEY,'
                     'forename varchar (150) NOT NULL,'
                     'surname varchar (150) NOT NULL,'

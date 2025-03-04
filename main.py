@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup
+from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee
 from utils import token_required
 import re
 import bcrypt
@@ -153,7 +153,9 @@ def register_user():
     request_language = request.json.get('language')
     request_timezone = request.json.get('timezone')
     request_description = request.json.get('description')
-
+    request_education = request.json.get('education')
+    request_profile_img = request.json.get('profile_img')
+    
     # Server-side validation
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
@@ -165,9 +167,37 @@ def register_user():
         abort(400, description="Password must be at least 8 characters long")
 
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+        
     try:
-        success = register_user_db(request_username, hashed_password)
+        #success = register_user_db(request_username, hashed_password)
+        if request_profile == "tutor":
+            success = register_tutor(
+                            request_username,
+                            hashed_password,
+                            request_forename,
+                            request_surname,
+                            request_email,
+                            request_age,
+                            request_language,
+                            request_timezone,
+                            request_description,
+                            request_education,
+                            request_profile_img
+                        )
+        elif request_profile == 'tutee':
+            success = register_tutee(
+                            request_username,
+                            hashed_password,
+                            request_forename,
+                            request_surname,
+                            request_email,
+                            request_age,
+                            request_language,
+                            request_timezone,
+                            request_description,
+                            request_education,
+                            request_profile_img
+                        )
     except Exception as e:
         abort(500, description=f"Database request failed with following error: {e}")
     else:
@@ -285,5 +315,5 @@ def fetch_content(user_id):
     return response    
 
 if __name__ == "__main__":
-    tutors_table_setup()
+    tutees_table_setup()
     app.run(port=8000, debug=True)
