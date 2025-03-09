@@ -5,12 +5,12 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
 
-from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee
+from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
 from utils import token_required
 import re
 import bcrypt
 
-from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+from database import fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -141,6 +141,24 @@ def logout():
     response.set_cookie("auth_token", "", expires=0)  # Clear the cookie
     return response
 
+@app.route("/validate_username", methods=['POST'])
+def username_validation():
+    request_username = request.json.get('username')
+    success = validate_username(request_username)
+    
+    if success:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "No duplicate username"}, 200
+        ))
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Username exists"}, 403
+        ))
+    return response
+
+
 @app.route("/registration", methods=['POST'])
 def register_user():
     request_profile = request.json.get('profile')
@@ -169,7 +187,6 @@ def register_user():
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
     try:
-        #success = register_user_db(request_username, hashed_password)
         if request_profile == "tutor":
             success = register_tutor(
                             request_username,

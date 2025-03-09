@@ -74,23 +74,16 @@ def items_table_setup(con : connection):
 
 
 @db_conn.with_conn 
-def register_user_db(con : connection, request_username, hashed_password):
+def validate_username(con : connection, request_username):
     with con.cursor() as cur:
-        # Error for Unique field violation
-        UserExists = errors.lookup('23505')
-        try:
-            cur.execute(sql.SQL(
-                "INSERT INTO users (username, password) VALUES ({username}, {password});"
-            ).format(
-                username=sql.Literal(request_username),
-                password=sql.Literal(hashed_password)
-            ))
-        except UserExists:
-            return False
-        else:
-            con.commit()
+        cur.execute("SELECT id FROM users WHERE username=%s;", (request_username,))
+        user_id = cur.fetchone()
+        if user_id == None:
             return True
-        
+        else:
+            return False
+
+
 @db_conn.with_conn 
 def register_tutor(con : connection, request_username, hashed_password, 
                    request_forename, request_surname, request_email, request_age,
