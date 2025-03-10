@@ -65,6 +65,22 @@ def tags_table_setup(con : connection):
         con.commit()
         
 @db_conn.with_conn
+def messages_table_setup(con: connection):
+    with con.cursor() as cur:
+        cur.execute("""CREATE TABLE IF NOT EXISTS messages (
+            id serial PRIMARY KEY,
+            sender varchar (150) NOT NULL REFERENCES users(username)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+            recipient varchar (150) NOT NULL REFERENCES users(username)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT NOW()
+        )""")
+        
+    con.commit() 
+    
+        
+@db_conn.with_conn
 def items_table_setup(con : connection):
     with con.cursor() as cur:
         cur.execute("""CREATE TABLE IF NOT EXISTS items (
@@ -218,6 +234,16 @@ def fetch_recommended_items(conn : connection, item_id_list : list):
         WHERE items.id IN %s;"""
         execute_values(cur, query, (tuple(item_id_list),))
         return cur.fetchall()
+    
+@db_conn.with_conn 
+def store_message(con : connection, sender: str, recipient: str, content: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""INSERT INTO messages (sender, recipient, content)
+                    VALUES ({sender}, {recipient}, {content})""")
+                    .format(sender=sql.Literal(sender),
+                            recipient = sql.Literal(recipient),
+                            content = sql.Literal(content)))
+    con.commit()
 
 @db_conn.with_conn
 def fetch_test(conn : connection):

@@ -10,7 +10,7 @@ from utils import token_required
 import re
 import bcrypt
 
-from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+from database import store_message, register_user_db, fetch_user_tags, fetch_item_tags,tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db, messages_table_setup
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -25,6 +25,7 @@ LookupTableGenerator().generate_lookup_table()
 items_table_setup()
 users_table_setup()
 tags_table_setup()  
+messages_table_setup()
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
@@ -275,6 +276,30 @@ def fetch_content(user_id):
     )
             
     return response    
+
+@app.route("/send-message", methods=['POST'])
+@token_required
+def send_message(user_id):
+    print(user_id)
+    recepient = request.json.get("recipient")
+    content = request.json.get("content")
+    
+    if not user_id or not recepient or user_id==recepient:
+        response = make_response(jsonify({
+        "success": False,
+        "message": "Invalid sender/recipient",}, 401
+    ))
+    
+    store_message(user_id, recepient, content)
+    
+    response = make_response(jsonify({
+        "success": True,
+        "message": f"{user_id} sent message to {recepient}"
+        }, 200)           
+    )
+            
+    return response   
+    
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
