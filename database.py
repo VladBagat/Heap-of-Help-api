@@ -74,7 +74,8 @@ def messages_table_setup(con: connection):
             recipient varchar (150) NOT NULL REFERENCES users(username)
             ON DELETE CASCADE ON UPDATE CASCADE,
             content TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT NOW()
+            timestamp TIMESTAMP DEFAULT NOW(),
+            CONSTRAINT sender_recipient_check CHECK (sender <> recipient)
         )""")
         
     con.commit() 
@@ -244,6 +245,16 @@ def store_message(con : connection, sender: str, recipient: str, content: str):
                             recipient = sql.Literal(recipient),
                             content = sql.Literal(content)))
     con.commit()
+
+@db_conn.with_conn 
+def fetch_messages(con : connection, sender: str, recipient: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""SELECT content FROM messages
+                    WHERE sender={sender} AND recipient={recipient}
+                    ORDER BY timestamp DESC LIMIT 50""")
+                    .format(sender=sql.Literal(sender),
+                            recipient = sql.Literal(recipient)))
+        return cur.fetchall()
 
 @db_conn.with_conn
 def fetch_test(conn : connection):

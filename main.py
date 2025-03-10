@@ -10,7 +10,7 @@ from utils import token_required
 import re
 import bcrypt
 
-from database import store_message, register_user_db, fetch_user_tags, fetch_item_tags,tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db, messages_table_setup
+from database import store_message, fetch_messages, register_user_db, fetch_user_tags, fetch_item_tags,tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db, messages_table_setup
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -280,7 +280,6 @@ def fetch_content(user_id):
 @app.route("/send-message", methods=['POST'])
 @token_required
 def send_message(user_id):
-    print(user_id)
     recepient = request.json.get("recipient")
     content = request.json.get("content")
     
@@ -299,7 +298,39 @@ def send_message(user_id):
     )
             
     return response   
+
+@app.route("/message-history", methods=['GET'])
+@token_required
+def message_history(user_id):
+    print(user_id)
+    recepient = request.json.get("recipient")
     
+    if not user_id or not recepient or user_id==recepient:
+        return make_response(jsonify({
+        "success": False,
+        "message": "Invalid sender/recipient",}, 401
+    ))
+    
+    sent = fetch_messages(user_id, recepient)
+    recieved = fetch_messages(recepient, user_id)
+    messages = {"sent": sent, "recieved": recieved}
+    
+    messages_amount = len(sent)+len(recieved)
+    
+    if messages_amount == 0:
+        return make_response(jsonify({
+        "success": False,
+        "message": f"No messages found"
+        }, 200))  
+        
+    return make_response(jsonify({
+        "success": True,
+        "message": f"{messages_amount} messages found",
+        "content": messages
+        }, 200)           
+    )  
+    
+
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
