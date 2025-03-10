@@ -76,7 +76,7 @@ def fetch_tutor_tags(conn : connection):
 @db_conn.with_conn 
 def fetch_recommended_tutors(conn : connection, item_id_list : list):
     with conn.cursor() as cur:
-        query = """SELECT first_name, last_name, description, profile_img 
+        query = """SELECT forename, surname, description, profile_img 
         FROM tutors WHERE id IN %s;"""
         execute_values(cur, query, (tuple(item_id_list),))
         return cur.fetchall()
