@@ -88,7 +88,7 @@ def validate_username(con : connection, request_username):
 def register_tutor(con : connection, request_username, hashed_password, 
                    request_forename, request_surname, request_email, request_age,
                    request_language, request_timezone, request_description,
-                   request_education, request_profile_img):
+                   request_education, request_profile_img, tag_list):
     with con.cursor() as cur:
         # Error for Unique field violation
         UserExists = errors.lookup('23505')
@@ -109,6 +109,14 @@ def register_tutor(con : connection, request_username, hashed_password,
              request_education, request_language, request_timezone, binary_img,
              request_description, user_id))
 
+            columns = [f"tag{i+1}" for i in range(len(tag_list))]  # Create column names dynamically
+            placeholders = ", ".join(["%s"] * len(tag_list))  # Create %s placeholders dynamically
+
+            sql = f"INSERT INTO tags (user_id, {', '.join(columns)}) VALUES (%s, {placeholders})"
+
+            # Execute with user_id as the first parameter
+            cur.execute(sql, (user_id, *tag_list))
+            
         except UserExists:
             return False
         else:
@@ -119,7 +127,7 @@ def register_tutor(con : connection, request_username, hashed_password,
 def register_tutee(con : connection, request_username, hashed_password, 
                    request_forename, request_surname, request_email, request_age,
                    request_language, request_timezone, request_description,
-                   request_education, request_profile_img):
+                   request_education, request_profile_img, tag_list):
     with con.cursor() as cur:
         # Error for Unique field violation
         UserExists = errors.lookup('23505')
@@ -139,6 +147,14 @@ def register_tutee(con : connection, request_username, hashed_password,
             (request_forename, request_surname, request_email, request_age,
              request_education, request_language, request_timezone, binary_img,
              request_description, user_id))
+            
+            columns = [f"tag{i+1}" for i in range(len(tag_list))]  # Create column names dynamically
+            placeholders = ", ".join(["%s"] * len(tag_list))  # Create %s placeholders dynamically
+
+            sql = f"INSERT INTO tags (user_id, {', '.join(columns)}) VALUES (%s, {placeholders})"
+
+            # Execute with user_id as the first parameter
+            cur.execute(sql, (user_id, *tag_list))
 
         except UserExists:
             return False

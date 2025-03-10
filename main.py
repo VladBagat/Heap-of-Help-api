@@ -4,9 +4,10 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
+import json
 
 from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
-from utils import token_required
+from utils import token_required, tag_encoder
 import re
 import bcrypt
 
@@ -173,6 +174,7 @@ def register_user():
     request_description = request.json.get('description')
     request_education = request.json.get('education')
     request_profile_img = request.json.get('profile_img')
+    request_tags = request.json.get("selectedTags")
     
     # Server-side validation
     if not request_username or not request_password:
@@ -185,6 +187,10 @@ def register_user():
         abort(400, description="Password must be at least 8 characters long")
 
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+    tag_list = []
+    for t in request_tags:
+        tag_list.append(tag_encoder(t))
         
     try:
         if request_profile == "tutor":
@@ -199,7 +205,8 @@ def register_user():
                             request_timezone,
                             request_description,
                             request_education,
-                            request_profile_img
+                            request_profile_img,
+                            tag_list
                         )
         elif request_profile == 'tutee':
             success = register_tutee(
@@ -213,27 +220,28 @@ def register_user():
                             request_timezone,
                             request_description,
                             request_education,
-                            request_profile_img
+                            request_profile_img,
+                            tag_list
                         )
     except Exception as e:
         abort(500, description=f"Database request failed with following error: {e}")
+    
+    if success:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Registration successful"}, 200
+        ))
     else:
-        if success:
-            response = make_response(jsonify({
-                "success": True,
-                "message": "Registration successful"}, 200
-            ))
-        else:
-            response = make_response(jsonify({
-                "success": False,
-                "message": "Registration unsuccessful, username already exists"}, 403
-            ))
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Registration unsuccessful, username already exists"}, 403
+        ))
 
-        token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
+    token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
+    
+    generate_cookie(response, token, True)
         
-        generate_cookie(response, token, True)
-            
-        return response
+    return response
 
 
 @app.route("/auth", methods=['GET'])
