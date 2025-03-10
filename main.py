@@ -265,7 +265,7 @@ def fetch_content(user_id):
     print(item_tags_dict)
     print(results)
     
-    items = [{"first_name": item[0], "last_name": item[1], "description": item[2],
+    items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
             "profile_img": base64.b64encode(item[3]).decode('utf-8'),
             "tags":LookupTableGenerator.convert_int_to_tag(item_tags_dict[results[index]])} for index, item in enumerate(items)]
     
