@@ -270,12 +270,12 @@ def get_tutee_profile(con : connection):
             return None  # No data found
         
 @db_conn.with_conn
-def get_tutor_profile(con : connection):
+def get_tutor_profile(con : connection, tutor_id):
     with con.cursor() as cur:
         cur.execute(sql.SQL(
-            'SELECT first_name, last_name, description, profile_img FROM tutors WHERE tutor_id={tutor_id};'
+            'SELECT forename, surname, description, profile_img FROM tutors WHERE tutor_id={tutor_id};'
             ).format(
-            tutor_id=sql.Literal(1),
+            tutor_id=sql.Literal(tutor_id),
             ))
         tutor_data = cur.fetchone()
         if tutor_data:

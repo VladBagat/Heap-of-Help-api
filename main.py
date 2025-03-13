@@ -6,18 +6,12 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 
-from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
+from database import fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
 from utils import token_required, tag_encoder
 import re
 import bcrypt
-
-
 import base64
-
-from database import register_user_db, fetch_user_tags, fetch_tutor_tags, tags_table_setup, users_table_setup, fetch_recommended_tutors, login_user_db
-
 import requests
-from database import fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
 
 from utils import token_required
 from ranking import RankingAlgorithm
@@ -289,9 +283,11 @@ def get_tutee():
     return response
 
 
-@app.route('/get_tutor_profile', methods=['GET'])
+@app.route('/get_tutor_profile', methods=['POST'])
 def get_tutor():
-    tutor_profile = get_tutor_profile()
+    tutor_id = request.json.get('id')
+    print(tutor_id)
+    tutor_profile = get_tutor_profile(tutor_id)
 
     if tutor_profile:
         response = make_response(jsonify({
@@ -330,8 +326,7 @@ def fetch_content(user_id):
     # Maybe use Andy's tutor fetch
     items = fetch_recommended_tutors(results)
     
-    print(item_tags_dict)
-    print(results)
+    item_tags_dict = {key: [x for x in value if x is not None] for key, value in item_tags_dict.items()}
     
     items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
             "profile_img": base64.b64encode(item[3]).decode('utf-8'),
