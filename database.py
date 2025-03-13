@@ -82,17 +82,88 @@ def fetch_recommended_tutors(conn : connection, item_id_list : list):
         return cur.fetchall()
         
 @db_conn.with_conn 
-def register_user_db(con : connection, request_username, hashed_password):
+def validate_username(con : connection, request_username):
+    with con.cursor() as cur:
+        cur.execute("SELECT id FROM users WHERE username=%s;", (request_username,))
+        user_id = cur.fetchone()
+        if user_id == None:
+            return True
+        else:
+            return False
+
+
+@db_conn.with_conn 
+def register_tutor(con : connection, request_username, hashed_password, 
+                   request_forename, request_surname, request_email, request_age,
+                   request_language, request_timezone, request_description,
+                   request_education, request_profile_img, tag_list):
     with con.cursor() as cur:
         # Error for Unique field violation
         UserExists = errors.lookup('23505')
+        
         try:
-            cur.execute(sql.SQL(
-                "INSERT INTO users (username, password) VALUES ({username}, {password});"
-            ).format(
-                username=sql.Literal(request_username),
-                password=sql.Literal(hashed_password)
-            ))
+            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
+            (request_username, hashed_password))
+            user_id = cur.fetchone()[0]  # Get the user ID directly
+
+            if request_profile_img:
+                binary_img = base64.b64decode(request_profile_img.split(",")[1])  # Decode Base64
+            else:
+                with open("default_img.jpg", "rb") as file:
+                    binary_img = file.read()  # Default image
+
+            cur.execute("INSERT INTO tutors (forename, surname, email, age, education, language, timezone, profile_img, description, id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+            (request_forename, request_surname, request_email, request_age,
+             request_education, request_language, request_timezone, binary_img,
+             request_description, user_id))
+
+            columns = [f"tag{i+1}" for i in range(len(tag_list))]  # Create column names dynamically
+            placeholders = ", ".join(["%s"] * len(tag_list))  # Create %s placeholders dynamically
+
+            sql = f"INSERT INTO tags (user_id, {', '.join(columns)}) VALUES (%s, {placeholders})"
+
+            # Execute with user_id as the first parameter
+            cur.execute(sql, (user_id, *tag_list))
+            
+        except UserExists:
+            return False
+        else:
+            con.commit()
+            return True
+        
+@db_conn.with_conn 
+def register_tutee(con : connection, request_username, hashed_password, 
+                   request_forename, request_surname, request_email, request_age,
+                   request_language, request_timezone, request_description,
+                   request_education, request_profile_img, tag_list):
+    with con.cursor() as cur:
+        # Error for Unique field violation
+        UserExists = errors.lookup('23505')
+        
+        try:
+            cur.execute("INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
+            (request_username, hashed_password))
+            user_id = cur.fetchone()[0]  # Get the user ID directly
+
+            if request_profile_img:
+                binary_img = base64.b64decode(request_profile_img.split(",")[1])  # Decode Base64
+            else:
+                with open("default_img.jpg", "rb") as file:
+                    binary_img = file.read()  # Default image
+
+            cur.execute("INSERT INTO tutees (forename, surname, email, age, education, language, timezone, profile_img, description, id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+            (request_forename, request_surname, request_email, request_age,
+             request_education, request_language, request_timezone, binary_img,
+             request_description, user_id))
+            
+            columns = [f"tag{i+1}" for i in range(len(tag_list))]  # Create column names dynamically
+            placeholders = ", ".join(["%s"] * len(tag_list))  # Create %s placeholders dynamically
+
+            sql = f"INSERT INTO tags (user_id, {', '.join(columns)}) VALUES (%s, {placeholders})"
+
+            # Execute with user_id as the first parameter
+            cur.execute(sql, (user_id, *tag_list))
+
         except UserExists:
             return False
         else:
@@ -120,14 +191,21 @@ def login_user_db(con: connection, request_username, request_password):
 @db_conn.with_conn
 def tutees_table_setup(con : connection):
     with con.cursor() as cur:
+        # cur.execute('DROP TABLE tutees;')
         cur.execute('CREATE TABLE IF NOT EXISTS tutees (tutee_id serial PRIMARY KEY,'
-                    'first_name varchar (150) NOT NULL,'
-                    'last_name varchar (150) NOT NULL,'
-                    'description TEXT NOT NULL,'
-                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE,'
-                    'profile_img BYTEA);'
+                    'forename varchar (150) NOT NULL,'
+                    'surname varchar (150) NOT NULL,'
+                    'email varchar (255) NOT NULL,'
+                    'age INT,'
+                    'education TEXT,'
+                    'language TEXT,'
+                    'timezone TEXT,'
+                    'profile_img BYTEA,'
+                    'description TEXT,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE);'
                     )
         
+        '''
         """Save an image to the database in BYTEA format."""
         with open("default_img.jpg", 'rb') as file:
             binary_data = file.read()  # Read image as binary
@@ -136,10 +214,42 @@ def tutees_table_setup(con : connection):
         INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
         VALUES (%s, %s, %s, %s, %s)
     """, ("Test", "test", "Hi", 234, binary_data))
+        '''
         
         con.commit()
         con.close()
         
+@db_conn.with_conn
+def tutors_table_setup(con : connection):
+    with con.cursor() as cur:
+        #cur.execute('DROP TABLE tutors;')
+        cur.execute('CREATE TABLE IF NOT EXISTS tutors (tutor_id serial PRIMARY KEY,'
+                    'forename varchar (150) NOT NULL,'
+                    'surname varchar (150) NOT NULL,'
+                    'email varchar (255) NOT NULL,'
+                    'age INT,'
+                    'education TEXT,'
+                    'language TEXT,'
+                    'timezone TEXT,'
+                    'profile_img BYTEA,'
+                    'description TEXT,'
+                    'id INTEGER REFERENCES users(id) ON DELETE CASCADE);'
+                    )
+        
+        '''
+        """Save an image to the database in BYTEA format."""
+        with open("default_img.jpg", 'rb') as file:
+            binary_data = file.read()  # Read image as binary
+
+        cur.execute("""
+        INSERT INTO tutees (first_name, last_name, description, id, profile_img) 
+        VALUES (%s, %s, %s, %s, %s)
+    """, ("Test", "test", "Hi", 234, binary_data))
+        '''
+        
+        con.commit()
+        con.close()
+
 @db_conn.with_conn
 def get_tutee_profile(con : connection):
     with con.cursor() as cur:
