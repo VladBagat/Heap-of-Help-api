@@ -10,13 +10,8 @@ from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tu
 from utils import token_required, tag_encoder
 import re
 import bcrypt
-<<<<<<< HEAD
 import requests
-from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
-=======
-
 from database import fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
->>>>>>> 325e17ebcd9ee528f4245f9064e488e69e790168
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
