@@ -10,8 +10,15 @@ from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tu
 from utils import token_required, tag_encoder
 import re
 import bcrypt
+
+
+import base64
+
+from database import register_user_db, fetch_user_tags, fetch_tutor_tags, tags_table_setup, users_table_setup, fetch_recommended_tutors, login_user_db
+
 import requests
 from database import fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -23,7 +30,6 @@ app = Flask(__name__)
 ra = RankingAlgorithm()
 LookupTableGenerator().generate_lookup_table()
 #DATABASE SETUP
-items_table_setup()
 users_table_setup()
 tags_table_setup()  
 
@@ -290,13 +296,13 @@ def get_tutor():
     if tutor_profile:
         response = make_response(jsonify({
             "success": True,
-            "message": "Tutee profile found",
+            "message": "Tutor profile found",
             "data": tutor_profile
         }), 200)
     else:
         response = make_response(jsonify({
             "success": False,
-            "message": "Tutee profile not found"
+            "message": "Tutor profile not found"
         }), 401)
     
     return response
@@ -304,32 +310,32 @@ def get_tutor():
 @app.route("/content", methods=['GET'])
 @token_required
 def fetch_content(user_id):
-    
-    if not user_id:
-        response = make_response(jsonify({
-        "success": False,
-        "message": "Credentials not found",}, 401
-    ))
-          
-    user_tags = list(fetch_user_tags(user_id))[0]
+    user_tags = list(fetch_user_tags(user_id))[0]  
     user_tags = [tag for tag in user_tags if tag is not None]
-    item_tags_list = fetch_item_tags()
+    item_tags_list = fetch_tutor_tags()
     
     item_tags_dict = {}
     
     result_dict = {}
     
     for item in item_tags_list:
-        item_tags_dict.update({item[1]: list(item[1:])})
-        
+        item_tags_dict.update({item[1]: list(item[2:])})
+                
     for key, value in item_tags_dict.items():
         value = [tag for tag in value if tag is not None]
         result_dict.update({key: ra.calculate_content_score(user_tags, value)})
             
-    results = [key for key, value in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
+    results = [key for key, _ in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
         
-    items = fetch_recommended_items(results)
+    # Maybe use Andy's tutor fetch
+    items = fetch_recommended_tutors(results)
     
+    print(item_tags_dict)
+    print(results)
+    
+    items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
+            "profile_img": base64.b64encode(item[3]).decode('utf-8'),
+            "tags":LookupTableGenerator.convert_int_to_tag(item_tags_dict[results[index]])} for index, item in enumerate(items)]
     
     response = make_response(jsonify({
         "success": True,
