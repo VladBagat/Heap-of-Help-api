@@ -9,7 +9,7 @@ from database import register_user_db, login_user_db, get_tutee_profile, tutees_
 from utils import token_required
 import re
 import bcrypt
-
+import requests
 from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
 from utils import token_required
 from ranking import RankingAlgorithm
@@ -274,7 +274,73 @@ def fetch_content(user_id):
         "content": items}, 200)
     )
             
-    return response    
+    return response
+
+
+@app.route("/news", methods=['GET'])
+def fetch_news():
+    """Fetches news content for user"""
+    key = getenv("NEWS_KEY")
+    params = {
+        'category': 'technology',
+        'language': 'en',  # Doesn't seem to get other languages
+        'sortBy': 'popularity',
+        'pageSize': 7,
+        'apiKey': key
+    }
+    try:
+        response = requests.get("https://newsapi.org/v2/top-headlines",
+                                params=params).json()['articles']
+        return response
+    except:
+        return "Failed to fetch news"
+
+
+@app.route("/more_news", methods=['GET'])
+def fetch_more_news():
+    # Allows user to fetch more news up to 5 times
+    page = request.args.get("page")
+    search = request.args.get("search")
+    key = getenv("NEWS_KEY")
+    params = {
+        'category': 'technology',
+        'language': 'en',
+        'q': search,
+        'sortBy': 'publishedAt',
+        'pageSize': 7,
+        'page': page,
+        'apiKey': key
+    }
+    try:
+        response = requests.get("https://newsapi.org/v2/top-headlines",
+                                params=params).json()['articles']
+
+        return response
+    except:
+        return "Failed to fetch news"
+
+
+@app.route("/search_news", methods=['GET'])
+def fetch_search_news():
+    search = request.args.get("search")
+    page = request.args.get("page")
+    key = getenv("NEWS_KEY")
+    params = {
+        'category': 'technology',
+        'q': search,
+        'language': 'en',
+        'sortBy': 'publishedAt',
+        'pageSize': 7,
+        'page': page,
+        'apiKey': key
+    }
+    try:
+        response = requests.get("https://newsapi.org/v2/top-headlines",
+                                params=params).json()['articles']
+        return response
+    except:
+        return "Failed to fetch news"
+
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
