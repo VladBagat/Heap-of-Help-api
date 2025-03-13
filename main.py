@@ -93,7 +93,6 @@ def authorize_user_credentials():
     try:
         status = login_user_db(request_username, request_password)
     except Exception as e:
-        print("Error Occurred")
         abort(500, description=f"Database request failed with following error: {e}")
     else:
         if status == 200:
@@ -286,7 +285,6 @@ def get_tutee():
 @app.route('/get_tutor_profile', methods=['POST'])
 def get_tutor():
     tutor_id = request.json.get('id')
-    print(tutor_id)
     tutor_profile = get_tutor_profile(tutor_id)
 
     if tutor_profile:
@@ -316,9 +314,11 @@ def fetch_content(user_id):
     
     for item in item_tags_list:
         item_tags_dict.update({item[1]: list(item[2:])})
-                
+        
+    item_tags_dict = {key: [x for x in value if x is not None] for key, value in item_tags_dict.items()}
+    
     for key, value in item_tags_dict.items():
-        value = [tag for tag in value if tag is not None]
+        value = [tag for tag in value]
         result_dict.update({key: ra.calculate_content_score(user_tags, value)})
             
     results = [key for key, _ in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
@@ -326,7 +326,7 @@ def fetch_content(user_id):
     # Maybe use Andy's tutor fetch
     items = fetch_recommended_tutors(results)
     
-    item_tags_dict = {key: [x for x in value if x is not None] for key, value in item_tags_dict.items()}
+    
     
     items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
             "profile_img": base64.b64encode(item[3]).decode('utf-8'),

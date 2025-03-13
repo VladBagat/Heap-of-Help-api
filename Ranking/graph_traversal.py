@@ -26,13 +26,13 @@ class GraphSearcher:
         item : Node = self.__graph[item]
             
         if user.depth < item.depth:
-            pass
+            return None
         
         if user.depth == self.max_depth:
-            pass
+            return None
         
         depth = user.depth
-        
+
         target : Node = self.__graph[user.parent.name]
         while depth > self.max_depth: #Assumes 1 parent
             if target.name == item.name:
@@ -47,10 +47,10 @@ class GraphSearcher:
         item : Node = self.__graph[item]
         
         if user.depth > item.depth:
-            pass
+            return None
         
         if user.depth == self.min_depth: 
-            pass
+            return None
         
         target_list : List[Node] = user.children
                 
