@@ -4,13 +4,19 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from os import getenv
+import json
 
-from database import register_user_db, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile
-from utils import token_required
+from database import login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
+from utils import token_required, tag_encoder
 import re
 import bcrypt
+<<<<<<< HEAD
 import requests
 from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+=======
+
+from database import fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+>>>>>>> 325e17ebcd9ee528f4245f9064e488e69e790168
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -54,7 +60,6 @@ def generate_cookie(response, token, remember):
         samesite="None", #TODO: Evaluate effect of this on security. 
         expires=expires
         )
-    
     return response
 
 
@@ -142,11 +147,40 @@ def logout():
     response.set_cookie("auth_token", "", expires=0)  # Clear the cookie
     return response
 
+@app.route("/validate_username", methods=['POST'])
+def username_validation():
+    request_username = request.json.get('username')
+    success = validate_username(request_username)
+    
+    if success:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "No duplicate username"}, 200
+        ))
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Username exists"}, 403
+        ))
+    return response
 
-@app.route("/register", methods=['POST'])
+
+@app.route("/registration", methods=['POST'])
 def register_user():
+    request_profile = request.json.get('profile')
     request_username = request.json.get('username')
     request_password = request.json.get('password')
+    request_forename = request.json.get('forename')
+    request_surname = request.json.get('surname')
+    request_age = request.json.get('age')
+    request_email = request.json.get('email')
+    request_language = request.json.get('language')
+    request_timezone = request.json.get('timezone')
+    request_description = request.json.get('description')
+    request_education = request.json.get('education')
+    request_profile_img = request.json.get('profile_img')
+    request_tags = request.json.get("selectedTags")
+    
     # Server-side validation
     if not request_username or not request_password:
         abort(400, description="Username and password are required")
@@ -158,28 +192,62 @@ def register_user():
         abort(400, description="Password must be at least 8 characters long")
 
     hashed_password = bcrypt.hashpw(request_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
+        
+    tag_list = []
+    for t in request_tags:
+        tag_list.append(tag_encoder(t))
+        
     try:
-        success = register_user_db(request_username, hashed_password)
+        if request_profile == "tutor":
+            success = register_tutor(
+                            request_username,
+                            hashed_password,
+                            request_forename,
+                            request_surname,
+                            request_email,
+                            request_age,
+                            request_language,
+                            request_timezone,
+                            request_description,
+                            request_education,
+                            request_profile_img,
+                            tag_list
+                        )
+        elif request_profile == 'tutee':
+            success = register_tutee(
+                            request_username,
+                            hashed_password,
+                            request_forename,
+                            request_surname,
+                            request_email,
+                            request_age,
+                            request_language,
+                            request_timezone,
+                            request_description,
+                            request_education,
+                            request_profile_img,
+                            tag_list
+                        )
     except Exception as e:
         abort(500, description=f"Database request failed with following error: {e}")
+    
+    if success:
+        response = make_response(jsonify({
+            "success": True,
+            "message": "Registration successful"}, 200
+        ))
     else:
-        if success:
-            response = make_response(jsonify({
-                "success": True,
-                "message": "Registration successful"}, 200
-            ))
-        else:
-            response = make_response(jsonify({
-                "success": False,
-                "message": "Registration unsuccessful, username already exists"}, 403
-            ))
+        response = make_response(jsonify({
+            "success": False,
+            "message": "Registration unsuccessful, username already exists"}, 403
+        ))
 
-        token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
+    token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
+    
+    generate_cookie(response, token, True)
         
-        generate_cookie(response, token, True)
-            
-        return response
+    return response
+
 
 @app.route("/auth", methods=['GET'])
 @token_required
@@ -343,4 +411,5 @@ def fetch_search_news():
 
 
 if __name__ == "__main__":
+    tutees_table_setup()
     app.run(port=8000, debug=True)
