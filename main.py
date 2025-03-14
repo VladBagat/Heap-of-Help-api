@@ -135,11 +135,23 @@ def authorize_user_credentials():
 
 @app.route("/logout", methods=['POST'])
 def logout():
+    expired_token = generate_jwt({"user_id": "invalid", "exp": datetime.now(timezone.utc) - timedelta(seconds=1)})
+    
     response = make_response(jsonify({
         "success": True,
         "message": "Logged out successfully"
     }))
-    response.set_cookie("auth_token", "", expires=0)  # Clear the cookie
+    
+    # Set the JWT cookie to expire immediately
+    response.set_cookie(
+        "jwt", 
+        expired_token,  # Set an expired JWT
+        httponly=True, 
+        secure=True, 
+        samesite="None",
+        expires=0  # Expire immediately
+    )
+    
     return response
 
 @app.route("/validate_username", methods=['POST'])
