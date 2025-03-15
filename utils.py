@@ -15,13 +15,17 @@ def token_required(f):
             abort(401, description="Authorization token is missing")
         try:
             data=jwt.decode(token, jwt_secret, algorithms=["HS256"])
-            current_user=data["user_id"]
+            current_user=data["username"]
+            user_id = data["user_id"]
             if current_user is None:
                 abort(403, description="Bad Credentials")
         except jwt.ExpiredSignatureError:
             abort(403, description="Token is outdated")
+        except KeyError: {
+            abort(403, description="Bad Credentials")
+        }
 
-        return f(current_user, *args, **kwargs)
+        return f(current_user, user_id, *args, **kwargs)
 
     return decorated
 
