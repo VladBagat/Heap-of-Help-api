@@ -200,4 +200,18 @@ def is_tutor(con: connection, user_id):
         else:
             return False
 
-    
+@db_conn.with_conn
+def update_profile_db(con: connection, user_id, forename, surname, email, age, education, language, timezone, description):
+    with con.cursor() as cur:
+        try:
+            cur.execute("""
+                UPDATE profiles
+                SET forename = %s, surname = %s, email = %s, age = %s, 
+                    education = %s, language = %s, timezone = %s, description = %s
+                WHERE id = %s;
+            """, (forename, surname, email, age, education, language, timezone, description, user_id))
+            con.commit()
+            return True
+        except Exception as e:
+            print("Database update error:", e)
+            return False
