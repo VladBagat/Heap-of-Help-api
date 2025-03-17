@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 
-from database import fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_tutee_profile, tutees_table_setup, is_tutor, get_tutor_profile, tutors_table_setup, register_tutor, register_tutee, validate_username
+from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username
 from utils import token_required, tag_encoder
 import re
 import bcrypt
@@ -25,6 +25,7 @@ ra = RankingAlgorithm()
 LookupTableGenerator().generate_lookup_table()
 #DATABASE SETUP
 users_table_setup()
+profiles_table_setup()
 tags_table_setup()  
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
@@ -58,14 +59,9 @@ def generate_cookie(response, token, remember):
     return response
 
 
-@app.route("/hello", methods=['GET'])
-@token_required
-def hello_world(current_user):
-    return "<p>Hello, World!</p>"
-
 @app.route("/pageowner", methods=['POST'])
 @token_required
-def check_owner(current_user):
+def check_owner(current_user, current_id):
     if current_user == request.json.get('username'):
         response = make_response(jsonify({
             "success": True,
@@ -93,43 +89,33 @@ def authorize_user_credentials():
     try:
         status = login_user_db(request_username, request_password)
     except Exception as e:
-        print("Error Occurred")
         abort(500, description=f"Database request failed with following error: {e}")
     else:
-        if status == 200:
-            tutor = is_tutor(request_username)
+        if status:
             response = make_response(jsonify({
                 "success": True,
                 "message": "Authorisation successful",
-                "isTutor": tutor,
-                "username": request_username
-            }, 200))
+                "id": status
+            }), 200)
             if remember:
-                token = generate_jwt({"user_id": request_username,
+                token = generate_jwt({"username": request_username, "user_id": status,
                                   "exp": datetime.now(timezone.utc) + timedelta(
                                       days=14)})
 
                 generate_cookie(response, token, True)
 
             else:
-                token = generate_jwt({"user_id": request_username})
+                token = generate_jwt({"username": request_username, "user_id": status})
 
                 generate_cookie(response, token, False)
                 
             return response
 
-        elif status == 401:
+        else:
             response = make_response(jsonify({
                 "success": False,
-                "message": "Authorization unsuccessful"}, 401
-            ))
-            return response
-
-        elif status == 404:
-            response = make_response(jsonify({
-                "success": False,
-                "message": "User not found"}, 404
-            ))
+                "message": "Authorization unsuccessful"}
+            ), 401)
             return response
 
 
@@ -154,6 +140,7 @@ def logout():
     
     return response
 
+
 @app.route("/validate_username", methods=['POST'])
 def username_validation():
     request_username = request.json.get('username')
@@ -162,13 +149,13 @@ def username_validation():
     if success:
         response = make_response(jsonify({
             "success": True,
-            "message": "No duplicate username"}, 200
-        ))
+            "message": "No duplicate username"}
+        ), 200)
     else:
         response = make_response(jsonify({
             "success": False,
-            "message": "Username exists"}, 403
-        ))
+            "message": "Username exists"}
+        ), 403)
     return response
 
 
@@ -203,54 +190,42 @@ def register_user():
     tag_list = []
     for t in request_tags:
         tag_list.append(tag_encoder(t))
-        
     try:
-        if request_profile == "tutor":
-            success = register_tutor(
-                            request_username,
-                            hashed_password,
-                            request_forename,
-                            request_surname,
-                            request_email,
-                            request_age,
-                            request_language,
-                            request_timezone,
-                            request_description,
-                            request_education,
-                            request_profile_img,
-                            tag_list
-                        )
-        elif request_profile == 'tutee':
-            success = register_tutee(
-                            request_username,
-                            hashed_password,
-                            request_forename,
-                            request_surname,
-                            request_email,
-                            request_age,
-                            request_language,
-                            request_timezone,
-                            request_description,
-                            request_education,
-                            request_profile_img,
-                            tag_list
-                        )
+        success = register_profile (
+            request_profile,
+            request_username,
+            hashed_password,
+            request_forename,
+            request_surname,
+            request_email,
+            request_age,
+            request_language,
+            request_timezone,
+            request_description,
+            request_education,
+            request_profile_img,
+            tag_list
+        )
+        
     except Exception as e:
         abort(500, description=f"Database request failed with following error: {e}")
     
     if success:
         response = make_response(jsonify({
             "success": True,
-            "message": "Registration successful"}, 200
-        ))
+            "message": "Registration successful",
+            "content": success
+            }
+        ), 200)
     else:
-        response = make_response(jsonify({
+        return make_response(jsonify({
             "success": False,
-            "message": "Registration unsuccessful, username already exists"}, 403
-        ))
+            "message": "Registration unsuccessful, username already exists"}
+        ), 403)
+    token = generate_jwt({"username": request_username, "user_id": success,
+                                  "exp": datetime.now(timezone.utc) + timedelta(
+                                      days=14)})
 
-    token = generate_jwt({"user_id": request_username, "exp": datetime.now(timezone.utc) + timedelta(days=14)})
-    
     generate_cookie(response, token, True)
         
     return response
@@ -258,11 +233,11 @@ def register_user():
 
 @app.route("/auth", methods=['GET'])
 @token_required
-def authorize_user_cookie(user_id):
+def authorize_user_cookie(current_user, current_id):
     '''Fetches user_id (login so far) from browser-saved cookie and returns it to the frontend.
     If no cookie is supplied (only happens when cookie is absent/outdated) then bad request is returned.'''
     
-    if not user_id:
+    if not current_user:
         response = make_response(jsonify({
             "success": False,
             "message": "Credentials not found",}, 401
@@ -271,14 +246,15 @@ def authorize_user_cookie(user_id):
         response = make_response(jsonify({
             "success": True,
             "message": "Authorization successful",
-            "user_id": user_id}, 200
+            "user_id": current_id}, 200
         ))
     
     return response
 
 @app.route('/get_tutee_profile', methods=['GET'])
 def get_tutee():
-    tutee_profile = get_tutee_profile()
+    tutor_id = request.json.get('id')
+    tutee_profile = get_profile(tutor_id)
 
     if tutee_profile:
         response = make_response(jsonify({
@@ -298,8 +274,7 @@ def get_tutee():
 @app.route('/get_tutor_profile', methods=['POST'])
 def get_tutor():
     tutor_id = request.json.get('id')
-    print(tutor_id)
-    tutor_profile = get_tutor_profile(tutor_id)
+    tutor_profile = get_profile(tutor_id)
 
     if tutor_profile:
         response = make_response(jsonify({
@@ -317,8 +292,8 @@ def get_tutor():
 
 @app.route("/content", methods=['GET'])
 @token_required
-def fetch_content(user_id):
-    user_tags = list(fetch_user_tags(user_id))[0]  
+def fetch_content(current_user, current_id):
+    user_tags = list(fetch_user_tags(current_id))[0]  
     user_tags = [tag for tag in user_tags if tag is not None]
     item_tags_list = fetch_tutor_tags()
     
@@ -328,17 +303,17 @@ def fetch_content(user_id):
     
     for item in item_tags_list:
         item_tags_dict.update({item[1]: list(item[2:])})
-                
+        
+    item_tags_dict = {key: [x for x in value if x is not None] for key, value in item_tags_dict.items()}
+    
     for key, value in item_tags_dict.items():
-        value = [tag for tag in value if tag is not None]
+        value = [tag for tag in value]
         result_dict.update({key: ra.calculate_content_score(user_tags, value)})
             
     results = [key for key, _ in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
         
     # Maybe use Andy's tutor fetch
     items = fetch_recommended_tutors(results)
-    
-    item_tags_dict = {key: [x for x in value if x is not None] for key, value in item_tags_dict.items()}
     
     items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
             "profile_img": base64.b64encode(item[3]).decode('utf-8'),
@@ -419,5 +394,4 @@ def fetch_search_news():
 
 
 if __name__ == "__main__":
-    tutees_table_setup()
     app.run(port=8000, debug=True)
