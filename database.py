@@ -110,7 +110,6 @@ def register_profile(con: connection, request_profile, request_username, hashed_
             else:
                 with open("default_img.jpg", "rb") as file:
                     binary_img = file.read()  # Default image
-            print(request_profile)
             cur.execute("INSERT INTO profiles (forename, surname, email, age, education, language, timezone, profile_img, description, id, discoverable) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
             (request_forename, request_surname, request_email, request_age,
              request_education, request_language, request_timezone, binary_img,
@@ -141,8 +140,6 @@ def login_user_db(con: connection, request_username, request_password):
             ))
 
         hashed_pass, id = cur.fetchone()
-        print(hashed_pass)
-        print(request_password)
         if hashed_pass is None:
             return False
         if bcrypt.checkpw(request_password.encode('utf-8'),
@@ -173,7 +170,6 @@ def profiles_table_setup(con: connection):
 @db_conn.with_conn
 def get_profile(con : connection, user_id):
     with con.cursor() as cur:
-        print(user_id)
         cur.execute(sql.SQL(
             'SELECT forename, surname, description, profile_img FROM profiles WHERE id={user_id};'
             ).format(

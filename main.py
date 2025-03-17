@@ -222,7 +222,6 @@ def register_user():
             "success": False,
             "message": "Registration unsuccessful, username already exists"}
         ), 403)
-    print(request_username, success)
     token = generate_jwt({"username": request_username, "user_id": success,
                                   "exp": datetime.now(timezone.utc) + timedelta(
                                       days=14)})
