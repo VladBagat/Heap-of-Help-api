@@ -168,23 +168,31 @@ def profiles_table_setup(con: connection):
     con.commit()
                
 @db_conn.with_conn
-def get_profile(con : connection, user_id):
+@db_conn.with_conn
+def get_profile(con, user_id):
     with con.cursor() as cur:
         cur.execute(sql.SQL(
-            'SELECT forename, surname, description, profile_img FROM profiles WHERE id={user_id};'
-            ).format(
-            user_id=sql.Literal(user_id),
-            ))
+            '''SELECT forename, surname, email, age, education, language, timezone, description, profile_img
+               FROM profiles WHERE id={user_id};'''
+        ).format(user_id=sql.Literal(user_id)))
+        
         user_data = cur.fetchone()
+        
         if user_data:
             return {
                 "first_name": user_data[0],
                 "last_name": user_data[1],
-                "description": user_data[2],
-                "profile_img": base64.b64encode(user_data[3]).decode('utf-8')# This is in BYTEA format                
+                "email": user_data[2],
+                "age": user_data[3],
+                "education": user_data[4],
+                "language": user_data[5],
+                "timezone": user_data[6],
+                "description": user_data[7],
+                "profile_img": base64.b64encode(user_data[8]).decode('utf-8') if user_data[8] else None
             }
         else:
-            return None  # No data found
+            return None
+
 
 @db_conn.with_conn
 def is_tutor(con: connection, user_id):
