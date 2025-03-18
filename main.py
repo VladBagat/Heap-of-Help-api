@@ -18,6 +18,12 @@ from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
 
 
+from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+from utils import token_required
+from ranking import RankingAlgorithm
+from Ranking.lookup_table import LookupTableGenerator
+
+
 app = Flask(__name__)
 
 #TODO : This area will be substitues with __init__ when we will move this to a class. 
@@ -26,6 +32,7 @@ LookupTableGenerator().generate_lookup_table()
 #DATABASE SETUP
 users_table_setup()
 profiles_table_setup()
+users_table_setup()
 tags_table_setup()  
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
@@ -62,6 +69,23 @@ def generate_cookie(response, token, remember):
 @app.route("/pageowner", methods=['POST'])
 @token_required
 def check_owner(current_user, current_id):
+    if current_user == request.json.get('username'):
+        response = make_response(jsonify({
+            "success": True,
+            "message": "User is owner"}, 200
+    ))
+
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "User is not owner"}, 401
+    ))
+ 
+    return response
+
+@app.route("/pageowner", methods=['POST'])
+@token_required
+def check_owner(current_user):
     if current_user == request.json.get('username'):
         response = make_response(jsonify({
             "success": True,

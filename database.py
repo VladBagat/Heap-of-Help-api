@@ -30,10 +30,21 @@ db_conn = Connection(user=user, password=password, host=host, database=database)
 @db_conn.with_conn
 def users_table_setup(con : connection):
     with con.cursor() as cur:
-        cur.execute('CREATE TABLE IF NOT EXISTS users (id serial PRIMARY KEY,'
-                    'username varchar (150) NOT NULL UNIQUE,'
+        cur.execute('CREATE TABLE IF NOT EXISTS users ('
+                    'id SERIAL PRIMARY KEY,'
+                    'forename VARCHAR(100) NOT NULL,'
+                    'surname VARCHAR(100) NOT NULL,'
+                    'email VARCHAR(255) NOT NULL UNIQUE,'
+                    'phonenumber VARCHAR(15) NOT NULL,'
                     'password TEXT NOT NULL,'
-                    'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);'
+                    'role VARCHAR(10) CHECK (role IN (\'tutor\', \'tutee\')) NOT NULL,'
+                    'profile_image TEXT DEFAULT NULL,'
+                    'location VARCHAR(255) DEFAULT NULL,'
+                    'description TEXT DEFAULT NULL,'
+                    'tags TEXT DEFAULT NULL,'
+                    'rating DECIMAL(3,1) DEFAULT NULL,'
+                    'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+                    ');'
                     )
     con.commit()
         
