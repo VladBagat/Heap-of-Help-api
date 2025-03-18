@@ -315,10 +315,9 @@ def fetch_content(current_user, current_id):
     # Maybe use Andy's tutor fetch
     items = fetch_recommended_tutors(results)
     
-    items = [{"user_id": results[index], "first_name": item[0], "last_name": item[1], "description": item[2],
-            "profile_img": base64.b64encode(item[3]).decode('utf-8'),
-            "tags":LookupTableGenerator.convert_int_to_tag(item_tags_dict[results[index]])} for index, item in enumerate(items)]
-    
+    items = [{"user_id": item[0], "first_name": item[1], "last_name": item[2], "description": item[3],
+            "profile_img": base64.b64encode(item[4]).decode('utf-8'),
+            "tags":LookupTableGenerator.convert_int_to_tag(item_tags_dict[item[0]])} for item in items]
     response = make_response(jsonify({
         "success": True,
         "message": f"Fetched {len(items)} items",
