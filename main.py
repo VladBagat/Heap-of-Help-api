@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 
-from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username
+from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
 from utils import token_required, tag_encoder
 import re
 import bcrypt
@@ -251,44 +251,78 @@ def authorize_user_cookie(current_user, current_id):
     
     return response
 
-@app.route('/get_tutee_profile', methods=['GET'])
-def get_tutee():
-    tutor_id = request.json.get('id')
-    tutee_profile = get_profile(tutor_id)
-
-    if tutee_profile:
-        response = make_response(jsonify({
-            "success": True,
-            "message": "Tutee profile found",
-            "data": tutee_profile
-        }), 200)
-    else:
-        response = make_response(jsonify({
-            "success": False,
-            "message": "Tutee profile not found"
-        }), 401)
-    
-    return response
-
-
-@app.route('/get_tutor_profile', methods=['POST'])
+@app.route('/get_tutor_profile', methods=['GET'])
 def get_tutor():
-    tutor_id = request.json.get('id')
+    tutor_id = request.args.get('id') 
+
+    if not tutor_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
+
     tutor_profile = get_profile(tutor_id)
 
     if tutor_profile:
-        response = make_response(jsonify({
+        return jsonify({
             "success": True,
             "message": "Tutor profile found",
             "data": tutor_profile
-        }), 200)
+        }), 200
     else:
-        response = make_response(jsonify({
+        return jsonify({
             "success": False,
             "message": "Tutor profile not found"
-        }), 401)
-    
-    return response
+        }), 404 
+
+
+@app.route('/get_tutee_profile', methods=['GET'])
+def get_tutee():
+    tutee_id = request.args.get('id')  
+
+    if not tutee_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
+
+    tutee_profile = get_profile(tutee_id)
+
+    if tutee_profile:
+        return jsonify({
+            "success": True,
+            "message": "Tutee profile found",
+            "data": tutee_profile
+        }), 200
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Tutee profile not found"
+        }), 404 
+
+
+@app.route('/update_profile', methods=['POST'])
+@token_required
+def update_profile(current_user, current_id):
+    """Allows the logged-in user to update their profile."""
+    data = request.json
+
+    required_fields = ['forename', 'surname', 'email', 'age', 'education', 'language', 'timezone', 'description']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"success": False, "message": f"Missing field: {field}"}), 400
+
+    success = update_profile_db(
+        user_id=current_id,
+        forename=data.get('forename'),
+        surname=data.get('surname'),
+        email=data.get('email'),
+        age=data.get('age'),
+        education=data.get('education'),
+        language=data.get('language'),
+        timezone=data.get('timezone'),
+        description=data.get('description')
+    )
+
+    if success:
+        return jsonify({"success": True, "message": "Profile updated successfully"}), 200
+    else:
+        return jsonify({"success": False, "message": "Failed to update profile"}), 500
+
 
 @app.route("/content", methods=['POST'])
 @token_required
