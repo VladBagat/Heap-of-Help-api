@@ -251,9 +251,32 @@ def authorize_user_cookie(current_user, current_id):
     
     return response
 
+@app.route('/get_tutor_profile', methods=['GET'])
+def get_tutor():
+    tutor_id = request.args.get('id')
+
+    if not tutor_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
+
+    tutor_profile = get_profile(tutor_id)
+
+    if tutor_profile:
+        return jsonify({
+            "success": True,
+            "message": "Tutor profile found",
+            "data": tutor_profile
+        }), 200
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Tutor profile not found"
+        }), 404  
+
+
 @app.route('/get_tutee_profile', methods=['GET'])
 def get_tutee():
-    tutee_id = request.args.get('id')  # Use request.args for GET requests
+    tutee_id = request.args.get('id')
+
     if not tutee_id:
         return jsonify({"success": False, "message": "Missing user ID"}), 400
 
@@ -271,26 +294,6 @@ def get_tutee():
             "message": "Tutee profile not found"
         }), 404
 
-
-
-@app.route('/get_tutor_profile', methods=['GET'])
-def get_tutor():
-    tutor_id = request.args.get('id')
-    tutor_profile = get_profile(tutor_id)
-
-    if tutor_profile:
-        response = make_response(jsonify({
-            "success": True,
-            "message": "Tutor profile found",
-            "data": tutor_profile
-        }), 200)
-    else:
-        response = make_response(jsonify({
-            "success": False,
-            "message": "Tutor profile not found"
-        }), 401)
-    
-    return response
 
 @app.route('/update_profile', methods=['POST'])
 @token_required

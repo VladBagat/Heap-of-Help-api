@@ -7,7 +7,8 @@ import bcrypt
 Start functions with `@db_conn.with_conn`. This handles getting and putting connections for you. 
 We have at most 20 connections! Consult db_init.py for details.
 '''
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 from os import getenv
 from db_init import Connection
 from psycopg2.extensions import connection
@@ -168,9 +169,10 @@ def profiles_table_setup(con: connection):
     con.commit()
                
 @db_conn.with_conn
-@db_conn.with_conn
 def get_profile(con, user_id):
     with con.cursor() as cur:
+        logging.debug(f"Fetching profile for user_id: {user_id}")
+
         cur.execute(sql.SQL(
             '''SELECT forename, surname, email, age, education, language, timezone, description, profile_img
                FROM profiles WHERE id={user_id};'''
@@ -179,6 +181,7 @@ def get_profile(con, user_id):
         user_data = cur.fetchone()
         
         if user_data:
+            logging.debug(f"Profile found: {user_data}")
             return {
                 "first_name": user_data[0],
                 "last_name": user_data[1],
@@ -191,6 +194,7 @@ def get_profile(con, user_id):
                 "profile_img": base64.b64encode(user_data[8]).decode('utf-8') if user_data[8] else None
             }
         else:
+            logging.warning(f"No profile found for user_id: {user_id}")
             return None
 
 
