@@ -328,7 +328,15 @@ def update_profile(current_user, current_id):
 @token_required
 def fetch_content(current_user, current_id):
     ignore_profiles: list = request.json.get('exclusion', [])
-    user_tags = list(fetch_user_tags(current_id))[0]  
+    user_tags = list(fetch_user_tags(current_id))
+    if len(user_tags) > 0:
+        user_tags = user_tags[0]
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Couldn't fetch student tags"
+        }), 401
+        
     user_tags = [tag for tag in user_tags if tag is not None]
     item_tags_list = fetch_tutor_tags(ignore_profiles)
     
