@@ -10,7 +10,7 @@ from utils import token_required
 import re
 import bcrypt
 
-from database import store_message, fetch_messages, register_user_db, fetch_user_tags, fetch_item_tags,tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db, messages_table_setup
+from database import store_message, fetch_messages, register_user_db, fetch_user_tags, fetch_item_tags,tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db, messages_table_setup,fetch_user_chats
 from utils import token_required
 from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
@@ -329,8 +329,32 @@ def message_history(user_id):
         "content": messages
         }, 200)           
     )  
-    
 
+@app.route("/chat-list",methods=['GET'])
+@token_required
+def user_chats(userid):
+    try:
+        chats = fetch_user_chats(userid)
+        if len(chats) == 0:
+            return make_response(jsonify({
+                "success": False,
+                "message": f"No chats found",
+                "content": chats
+            }, 200))
+
+        return make_response(jsonify({
+            "success": True,
+            "message": f"{len(chats)} chats found",
+            "content": chats
+        }, 200)
+        )
+    except:
+        return make_response(jsonify({
+            "success": False,
+            "message": "Db Error",
+            "content": []
+        }, 500)
+        )
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)

@@ -255,6 +255,18 @@ def fetch_messages(con : connection, sender: str, recipient: str):
                     .format(sender=sql.Literal(sender),
                             recipient = sql.Literal(recipient)))
         return cur.fetchall()
+@db_conn.with_conn
+def fetch_user_chats(con : connection, userid: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""SELECT
+    CASE
+        WHEN sender = :{userID} THEN sender
+        ELSE recipient
+    END AS {user_id}
+FROM messages
+WHERE sender = :{userID} OR recipient = :{userID};
+        """).format(userID=sql.Literal(userid)))
+    return cur.fetchall()
 
 @db_conn.with_conn
 def fetch_test(conn : connection):
