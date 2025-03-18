@@ -290,12 +290,13 @@ def get_tutor():
     
     return response
 
-@app.route("/content", methods=['GET'])
+@app.route("/content", methods=['POST'])
 @token_required
 def fetch_content(current_user, current_id):
+    ignore_profiles: list = request.json.get('exclusion', [])
     user_tags = list(fetch_user_tags(current_id))[0]  
     user_tags = [tag for tag in user_tags if tag is not None]
-    item_tags_list = fetch_tutor_tags()
+    item_tags_list = fetch_tutor_tags(ignore_profiles)
     
     item_tags_dict = {}
     
@@ -318,10 +319,12 @@ def fetch_content(current_user, current_id):
     items = [{"user_id": item[0], "first_name": item[1], "last_name": item[2], "description": item[3],
             "profile_img": base64.b64encode(item[4]).decode('utf-8'),
             "tags":LookupTableGenerator.convert_int_to_tag(item_tags_dict[item[0]])} for item in items]
+    ignore_profiles.append(results)
+
     response = make_response(jsonify({
         "success": True,
         "message": f"Fetched {len(items)} items",
-        "content": items}, 200)
+        "content": {"items":items, "exclusion":ignore_profiles}}, 200)
     )
             
     return response

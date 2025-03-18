@@ -65,12 +65,16 @@ def fetch_user_tags(conn: connection, user_id):
         return cur.fetchall()
 
 @db_conn.with_conn
-def fetch_tutor_tags(conn: connection):
+def fetch_tutor_tags(conn: connection, ignore_profiles_list):
+    if not ignore_profiles_list:
+        ignore_profiles_list = [-1]
     with conn.cursor() as cur:
         cur.execute('''SELECT t.* FROM tags t
-                    JOIN profiles p ON t.user_id = p.id
-                    WHERE p.discoverable = true
-                    ORDER BY RANDOM() LIMIT 100;''')
+               JOIN profiles p ON t.user_id = p.id
+               WHERE p.discoverable = true
+               AND p.id NOT IN %s
+               ORDER BY RANDOM() 
+               LIMIT 100;''', (tuple(ignore_profiles_list),))
 
         return cur.fetchall()
     
