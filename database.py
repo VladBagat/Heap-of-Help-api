@@ -55,6 +55,22 @@ def tags_table_setup(con : connection):
     con.commit()
 
 @db_conn.with_conn
+def messages_table_setup(con: connection):
+    with con.cursor() as cur:
+        cur.execute("""CREATE TABLE IF NOT EXISTS messages (
+            id serial PRIMARY KEY,
+            sender INT NOT NULL REFERENCES users(id)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+            recipient INT NOT NULL REFERENCES users(id)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT NOW(),
+            CONSTRAINT sender_recipient_check CHECK (sender <> recipient)
+        )""")
+        
+    con.commit() 
+
+@db_conn.with_conn
 def fetch_user_tags(conn: connection, user_id):
     with conn.cursor() as cur:
         cur.execute(sql.SQL(
@@ -172,6 +188,37 @@ def profiles_table_setup(con: connection):
             )
     con.commit()
 
+@db_conn.with_conn 
+def store_message(con : connection, sender: str, recipient: str, content: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""INSERT INTO messages (sender, recipient, content)
+                    VALUES ({sender}, {recipient}, {content})""")
+                    .format(sender=sql.Literal(sender),
+                            recipient = sql.Literal(recipient),
+                            content = sql.Literal(content)))
+    con.commit()
+
+@db_conn.with_conn 
+def fetch_messages(con : connection, sender: str, recipient: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""SELECT content FROM messages
+                    WHERE sender={sender} AND recipient={recipient}
+                    ORDER BY timestamp DESC LIMIT 50""")
+                    .format(sender=sql.Literal(sender),
+                            recipient = sql.Literal(recipient)))
+        return cur.fetchall()
+@db_conn.with_conn
+def fetch_user_chats(con : connection, userid: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("""SELECT
+            CASE
+                WHEN sender = :{userID} THEN sender
+                ELSE recipient
+            END AS {user_id}
+        FROM messages
+        WHERE sender = :{userID} OR recipient = :{userID};
+        """).format(userID=sql.Literal(userid)))
+    return cur.fetchall()
 
 @db_conn.with_conn
 def get_profile(con, user_id):
