@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 
-from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
+from database import messages_table_setup, store_message, fetch_messages, fetch_user_chats, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
 from utils import token_required, tag_encoder
 import re
 import bcrypt
@@ -27,6 +27,7 @@ LookupTableGenerator().generate_lookup_table()
 users_table_setup()
 profiles_table_setup()
 tags_table_setup()  
+messages_table_setup()
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
@@ -415,6 +416,85 @@ def fetch_search_news():
     except:
         return "Failed to fetch news"
 
+
+@app.route("/send-message", methods=['POST'])
+@token_required
+def send_message(user_id):
+    recepient = request.json.get("recipient")
+    content = request.json.get("content")
+    
+    if not user_id or not recepient or user_id==recepient:
+        response = make_response(jsonify({
+        "success": False,
+        "message": "Invalid sender/recipient",}, 401
+    ))
+    
+    store_message(user_id, recepient, content)
+    
+    response = make_response(jsonify({
+        "success": True,
+        "message": f"{user_id} sent message to {recepient}"
+        }, 200)           
+    )
+            
+    return response   
+
+@app.route("/message-history", methods=['GET'])
+@token_required
+def message_history(user_id):
+    print(user_id)
+    recepient = request.json.get("recipient")
+    
+    if not user_id or not recepient or user_id==recepient:
+        return make_response(jsonify({
+        "success": False,
+        "message": "Invalid sender/recipient",}, 401
+    ))
+    
+    sent = fetch_messages(user_id, recepient)
+    recieved = fetch_messages(recepient, user_id)
+    messages = {"sent": sent, "recieved": recieved}
+    
+    messages_amount = len(sent)+len(recieved)
+    
+    if messages_amount == 0:
+        return make_response(jsonify({
+        "success": False,
+        "message": f"No messages found"
+        }, 200))  
+        
+    return make_response(jsonify({
+        "success": True,
+        "message": f"{messages_amount} messages found",
+        "content": messages
+        }, 200)           
+    )  
+
+@app.route("/chat-list",methods=['GET'])
+@token_required
+def user_chats(userid):
+    try:
+        chats = fetch_user_chats(userid)
+        if len(chats) == 0:
+            return make_response(jsonify({
+                "success": False,
+                "message": f"No chats found",
+                "content": chats
+            }, 200))
+
+        return make_response(jsonify({
+            "success": True,
+            "message": f"{len(chats)} chats found",
+            "content": chats
+        }, 200)
+        )
+    except:
+        return make_response(jsonify({
+            "success": False,
+            "message": "Db Error",
+            "content": []
+        }, 500)
+        )
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
