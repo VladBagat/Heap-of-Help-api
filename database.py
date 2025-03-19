@@ -171,7 +171,8 @@ def profiles_table_setup(con: connection):
             ;'''
             )
     con.commit()
-               
+
+
 @db_conn.with_conn
 def get_profile(con, user_id):
     with con.cursor() as cur:
