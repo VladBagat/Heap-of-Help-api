@@ -151,5 +151,34 @@ def authorize_user_cookie(user_id):
     
     return response
 
+@app.route("/can_rate_tutor", methods=['POST'])
+@token_required
+def can_rate_tutor(current_user):
+    tutor_id = request.json.get('tutor_id')
+    user_id = current_user
+
+    if not tutor_id:
+        abort(400, description="Tutor ID is required")
+
+    try:
+        from database import can_get_rated
+        can_be_rated = can_get_rated(tutor_id, user_id)
+
+        if can_be_rated:
+            response = make_response(jsonify({
+                "success": True,
+                "message": "Tutor can be rated"
+            }), 200)
+        else:
+            response = make_response(jsonify({
+                "success": False,
+                "message": "Tutor cannot be rated"
+            }), 400)
+
+    except Exception as e:
+        abort(500, description=f"Error checking tutor rating: {e}")
+
+    return response 
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -54,5 +54,28 @@ def fetch_test(conn : connection):
         cursor.execute(query)
         result = cursor.fetchall()
 
+@db_conn.with_conn 
+def can_get_rated(con: connection, tutor_id, user_id):
+    with con.cursor() as cur:
+        #check if the user(tutee) sent at least 1 message to tutor
+        cur.execute("""
+            SELECT COUNT() FROM messages
+            WHERE sender_id = %s AND recipient_id = %s
+        """, (user_id, tutor_id))
+        user_to_tutor_msg_count = cur.fetchone()[0]
+
+        #check if the tutor has sent at least 1 message to user
+        cur.execute("""
+            SELECT COUNT() FROM messages
+            WHERE sender_id = %s AND recipient_id = %s
+        """, (tutor_id, user_id))
+        tutor_to_user_msg_count = cur.fetchone()[0]
+
+
+        if user_to_tutor_msg_count > 0 and tutor_to_user_msg_count > 0:
+            return True
+        else:
+            return False
+        
 if __name__ == "__main__":
     fetch_test()
