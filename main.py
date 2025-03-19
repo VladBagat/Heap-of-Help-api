@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from os import getenv
 import json
 
-from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
+from database import register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db, enable_rating_db
 from utils import token_required, tag_encoder
 import re
 import bcrypt
@@ -62,18 +62,20 @@ def generate_cookie(response, token, remember):
 @app.route("/pageowner", methods=['POST'])
 @token_required
 def check_owner(current_user, current_id):
-    if current_user == request.json.get('username'):
+    user_id = request.json.get('user_id')
+    print(user_id)
+    print(current_id)
+    if int(current_id) == int(user_id):
         response = make_response(jsonify({
-            "success": True,
-            "message": "User is owner"}, 200
-    ))
-
-    else:
+                "success": True,
+                "message": "User is owner",
+            }), 200)
+    elif int(current_id) != int(user_id):
         response = make_response(jsonify({
             "success": False,
             "message": "User is not owner"}, 401
-    ))
- 
+        ))
+    
     return response
 
 
@@ -414,7 +416,25 @@ def fetch_search_news():
         return response
     except:
         return "Failed to fetch news"
+    
+@app.route('/enable_rating', methods=['POST'])
+@token_required
+def enable_rating(current_user, current_id):
+    if not current_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
 
+    en_rating = enable_rating_db(current_id, request.json.get("tutor_id"))
+
+    if en_rating:
+        return jsonify({
+            "success": True,
+            "message": "Can rate this tutor",
+        }), 200
+    else:
+        return jsonify({
+            "success": False,
+            "message": "cannot rate this tutor"
+        }), 403
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
