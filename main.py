@@ -419,21 +419,21 @@ def fetch_search_news():
 
 @app.route("/send-message", methods=['POST'])
 @token_required
-def send_message(user_id):
+def send_message(current_user, current_id):
     recepient = request.json.get("recipient")
     content = request.json.get("content")
     
-    if not user_id or not recepient or user_id==recepient:
-        response = make_response(jsonify({
+    if (not current_id) or (not recepient) or (current_id == recepient):
+        return make_response(jsonify({
         "success": False,
         "message": "Invalid sender/recipient",}, 401
     ))
     
-    store_message(user_id, recepient, content)
+    store_message(current_id, recepient, content)
     
     response = make_response(jsonify({
         "success": True,
-        "message": f"{user_id} sent message to {recepient}"
+        "message": f"{current_id} sent message to {recepient}"
         }, 200)           
     )
             
@@ -441,18 +441,17 @@ def send_message(user_id):
 
 @app.route("/message-history", methods=['GET'])
 @token_required
-def message_history(user_id):
-    print(user_id)
+def message_history(current_user, current_id):
     recepient = request.json.get("recipient")
     
-    if not user_id or not recepient or user_id==recepient:
+    if (not current_id) or (not recepient) or (current_id == recepient):
         return make_response(jsonify({
         "success": False,
         "message": "Invalid sender/recipient",}, 401
     ))
     
-    sent = fetch_messages(user_id, recepient)
-    recieved = fetch_messages(recepient, user_id)
+    sent = fetch_messages(current_id, recepient)
+    recieved = fetch_messages(recepient, current_id)
     messages = {"sent": sent, "recieved": recieved}
     
     messages_amount = len(sent)+len(recieved)
@@ -472,9 +471,9 @@ def message_history(user_id):
 
 @app.route("/chat-list",methods=['GET'])
 @token_required
-def user_chats(userid):
+def user_chats(current_user, current_id):
     try:
-        chats = fetch_user_chats(userid)
+        chats = fetch_user_chats(current_id)
         if len(chats) == 0:
             return make_response(jsonify({
                 "success": False,

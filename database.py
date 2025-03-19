@@ -54,13 +54,14 @@ def tags_table_setup(con : connection):
         cur.execute(user_tags)
     con.commit()
 
+@db_conn.with_conn
 def messages_table_setup(con: connection):
     with con.cursor() as cur:
         cur.execute("""CREATE TABLE IF NOT EXISTS messages (
             id serial PRIMARY KEY,
-            sender varchar (150) NOT NULL REFERENCES users(username)
+            sender INT NOT NULL REFERENCES users(id)
             ON DELETE CASCADE ON UPDATE CASCADE,
-            recipient varchar (150) NOT NULL REFERENCES users(username)
+            recipient INT NOT NULL REFERENCES users(id)
             ON DELETE CASCADE ON UPDATE CASCADE,
             content TEXT NOT NULL,
             timestamp TIMESTAMP DEFAULT NOW(),
@@ -210,12 +211,12 @@ def fetch_messages(con : connection, sender: str, recipient: str):
 def fetch_user_chats(con : connection, userid: str):
     with con.cursor() as cur:
         cur.execute(sql.SQL("""SELECT
-    CASE
-        WHEN sender = :{userID} THEN sender
-        ELSE recipient
-    END AS {user_id}
-FROM messages
-WHERE sender = :{userID} OR recipient = :{userID};
+            CASE
+                WHEN sender = :{userID} THEN sender
+                ELSE recipient
+            END AS {user_id}
+        FROM messages
+        WHERE sender = :{userID} OR recipient = :{userID};
         """).format(userID=sql.Literal(userid)))
     return cur.fetchall()
 
