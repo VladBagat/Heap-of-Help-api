@@ -7,7 +7,7 @@ from os import getenv
 import json
 
 
-from database import messages_table_setup, store_message, fetch_messages, fetch_user_chats, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
+from database import enable_rating_db, messages_table_setup, store_message, fetch_messages, fetch_user_chats, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
 
 from utils import token_required, tag_encoder
 import re
@@ -436,7 +436,7 @@ def enable_rating(current_user, current_id):
     else:
         return jsonify({
             "success": False,
-            "message": "cannot rate this tutor"
+            "message": "Cannot rate this tutor"
         }), 403
 
 @app.route("/send-message", methods=['POST'])

@@ -279,26 +279,12 @@ def update_profile_db(con: connection, user_id, forename, surname, email, age, e
 def enable_rating_db(con: connection, user_id, tutor_id):
     with con.cursor() as cur:
         try:
-            cur.execute("SELECT username FROM users WHERE id= %s;",
-            (user_id,))
-            username = cur.fetchone()[0]  # Get the user ID directly
-            cur.execute("SELECT username FROM users WHERE id= %s;",
-            (tutor_id,))
-            tutor_username = cur.fetchone()[0]  # Get the user ID directly
-            
-            cur.execute("SELECT id FROM messages WHERE sender=%s AND recipient=%s",
-                        (username, tutor_username,))
-            mes = cur.fetchone()
-            if mes == None:
-                return False
-            
-            cur.execute("SELECT id FROM messages WHERE sender=%s AND recipient=%s",
-                        (tutor_username, username,))
-            mes = cur.fetchone()
-            if mes == None:
-                return False
-            
-            return True
+            cur.execute("""SELECT COUNT(*) FROM messages
+                           WHERE (sender=%s AND recipient=%s)
+                           OR (sender=%s AND recipient=%s)""",
+                        (user_id, tutor_id, tutor_id, user_id))
+            count = cur.fetchone()[0]
+            return count >= 2
         except Exception as e:
             print("Database update error:", e)
             return False
