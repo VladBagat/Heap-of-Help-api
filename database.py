@@ -201,24 +201,66 @@ def store_message(con : connection, sender: str, recipient: str, content: str):
 @db_conn.with_conn 
 def fetch_messages(con : connection, sender: str, recipient: str):
     with con.cursor() as cur:
-        cur.execute(sql.SQL("""SELECT content FROM messages
+        cur.execute(sql.SQL("""SELECT content,timestamp FROM messages
                     WHERE sender={sender} AND recipient={recipient}
                     ORDER BY timestamp DESC LIMIT 50""")
                     .format(sender=sql.Literal(sender),
                             recipient = sql.Literal(recipient)))
-        return cur.fetchall()
+        results = cur.fetchall()
+        results = [
+            {
+                "content": row[0],
+                "timestamp": row[1].strftime("%Y-%m-%d %H:%M:%S")
+                # Format as needed
+            }
+            for row in results
+        ]
+
+        return results
+
+
 @db_conn.with_conn
 def fetch_user_chats(con : connection, userid: str):
     with con.cursor() as cur:
-        cur.execute(sql.SQL("""SELECT
-            CASE
-                WHEN sender = :{userID} THEN sender
-                ELSE recipient
-            END AS {user_id}
-        FROM messages
-        WHERE sender = :{userID} OR recipient = :{userID};
-        """).format(userID=sql.Literal(userid)))
-    return cur.fetchall()
+        cur.execute(sql.SQL("""
+            SELECT DISTINCT LEAST(sender, recipient) AS user1,
+                            GREATEST(sender, recipient) AS user2
+            FROM messages
+            WHERE sender = %s OR recipient = %s;
+        """), (userid, userid))
+
+        chat_pairs = cur.fetchall()
+        result = []
+
+        for user1, user2 in chat_pairs:
+            other_user = user2 if user1 == userid else user1
+            cur.execute(sql.SQL("""
+                SELECT content AS last_message, timestamp AS last_message_time
+                FROM messages
+                WHERE (sender = %s AND recipient = %s) OR (sender = %s AND recipient = %s)
+                ORDER BY timestamp DESC
+                LIMIT 1;
+            """), (userid, other_user, other_user, userid))
+            last_message = cur.fetchone()
+            cur.execute(sql.SQL("""
+                SELECT username
+                FROM users 
+                WHERE id = %s;
+            """), (other_user,))
+            user_profile = cur.fetchone()
+            result.append({ "id": other_user,
+                            "name": user_profile[0],
+                           "last_message": last_message[0],
+                           "last_messaged": last_message[1]})
+        print(result)
+
+        return result
+@db_conn.with_conn
+def check_valid_recipient(con : connection, userid: str):
+    with con.cursor() as cur:
+        cur.execute(sql.SQL("SELECT EXISTS(SELECT 1 FROM users WHERE id = %s);"), (userid,))
+        exists = cur.fetchone()[0]
+        return exists
 
 @db_conn.with_conn
 def get_profile(con, user_id):
@@ -227,12 +269,12 @@ def get_profile(con, user_id):
             '''SELECT forename, surname, email, age, education, language, timezone, description, profile_img
                FROM profiles WHERE id={user_id};'''
         ).format(user_id=sql.Literal(user_id)))
-        
+
         user_data = cur.fetchone()
-        
+
         if user_data:
             return {
-                "forename": user_data[0], 
+                "forename": user_data[0],
                 "surname": user_data[1],
                 "email": user_data[2],
                 "age": user_data[3],

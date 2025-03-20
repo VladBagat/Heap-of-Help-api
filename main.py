@@ -7,7 +7,7 @@ from os import getenv
 import json
 
 
-from database import enable_rating_db, messages_table_setup, store_message, fetch_messages, fetch_user_chats, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
+from database import enable_rating_db, messages_table_setup, store_message, fetch_messages, fetch_user_chats, check_valid_recipient, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
 
 from utils import token_required, tag_encoder
 import re
@@ -445,7 +445,7 @@ def send_message(current_user, current_id):
     recepient = request.json.get("recipient")
     content = request.json.get("content")
     
-    if (not current_id) or (not recepient) or (current_id == recepient):
+    if (not current_id) or (not recepient) or (current_id == recepient) or (len(content)>2000):
         return make_response(jsonify({
         "success": False,
         "message": "Invalid sender/recipient",}, 401
@@ -464,19 +464,23 @@ def send_message(current_user, current_id):
 @app.route("/message-history", methods=['GET'])
 @token_required
 def message_history(current_user, current_id):
-    recepient = request.json.get("recipient")
-    
-    if (not current_id) or (not recepient) or (current_id == recepient):
+    recipient = request.args.get("recipient")
+    if (not current_id) or (not recipient) or (current_id == recipient) or (recipient.isalpha()):
         return make_response(jsonify({
         "success": False,
         "message": "Invalid sender/recipient",}, 401
     ))
-    
-    sent = fetch_messages(current_id, recepient)
-    recieved = fetch_messages(recepient, current_id)
-    messages = {"sent": sent, "recieved": recieved}
-    
-    messages_amount = len(sent)+len(recieved)
+    check = check_valid_recipient(recipient)
+    if not check:
+        return make_response(jsonify({
+            "success": False,
+            "message": f"Recipient does not Exist"
+        }, 404))
+
+    sent = fetch_messages(current_id, recipient)
+    received = fetch_messages(recipient, current_id)
+    messages = {"sent": sent, "received": received}
+    messages_amount = len(sent)+len(received)
     
     if messages_amount == 0:
         return make_response(jsonify({
@@ -493,7 +497,7 @@ def message_history(current_user, current_id):
 
 @app.route("/chat-list",methods=['GET'])
 @token_required
-def user_chats(current_user, current_id):
+def user_chats(current_user,current_id):
     try:
         chats = fetch_user_chats(current_id)
         if len(chats) == 0:
@@ -501,7 +505,7 @@ def user_chats(current_user, current_id):
                 "success": False,
                 "message": f"No chats found",
                 "content": chats
-            }, 200))
+            }, 404))
 
         return make_response(jsonify({
             "success": True,
@@ -513,7 +517,7 @@ def user_chats(current_user, current_id):
         return make_response(jsonify({
             "success": False,
             "message": "Db Error",
-            "content": []
+            "content": {}
         }, 500)
         )
 
