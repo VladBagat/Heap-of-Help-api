@@ -44,4 +44,3 @@ class LookupTableGenerator:
         with open("lookup.json", "r") as out_file:
             lookup_table = json.load(out_file)
         return [list(lookup_table.keys())[list(lookup_table.values()).index(tag)] for tag in tags]
-
