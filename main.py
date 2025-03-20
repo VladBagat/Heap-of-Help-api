@@ -7,7 +7,7 @@ from os import getenv
 import json
 
 
-from database import enable_rating_db, messages_table_setup, store_message, fetch_messages, fetch_user_chats, check_valid_recipient, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db
+from database import enable_rating_db, messages_table_setup, store_message, fetch_messages, fetch_user_chats, check_valid_recipient, register_profile, fetch_tutor_tags, fetch_recommended_tutors, fetch_user_tags, users_table_setup, tags_table_setup, login_user_db, get_profile, profiles_table_setup, is_tutor, validate_username, update_profile_db, ratings_table_setup, rating_check_db, rating_db, ave_rating_load_db
 
 from utils import token_required, tag_encoder
 import re
@@ -30,7 +30,7 @@ users_table_setup()
 profiles_table_setup()
 tags_table_setup()  
 messages_table_setup()
-
+ratings_table_setup()
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
 load_dotenv()
@@ -520,6 +520,47 @@ def user_chats(current_user,current_id):
             "content": {}
         }, 500)
         )
+
+@app.route('/rating_check', methods=['POST'])
+@token_required
+def rating_check(current_user, current_id):
+    if not current_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
+
+    rating = rating_check_db(current_id, request.json.get("tutor_id"))
+    ave = ave_rating_load_db(request.json.get("tutor_id"))
+    if not rating:
+        return jsonify({
+            "success": True,
+            "message": "Can rate this tutor",
+            "average": ave
+        }), 200
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Already rated this tutor",
+            "rating": rating,
+            "average": ave
+        }), 403
+
+@app.route('/rating', methods=['POST'])
+@token_required
+def rating(current_user, current_id):
+    if not current_id:
+        return jsonify({"success": False, "message": "Missing user ID"}), 400
+    
+    check = rating_db(current_id, request.json.get("tutor_id"), request.json.get("rated"), request.json.get("rating"))
+
+    if check:
+        return jsonify({
+            "success": True,
+            "message": "Can rate this tutor",
+        }), 200
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Already rated this tutor",
+        }), 403
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)

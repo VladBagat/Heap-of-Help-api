@@ -332,3 +332,70 @@ def enable_rating_db(con: connection, user_id, tutor_id):
         except Exception as e:
             print("Database update error:", e)
             return False
+
+@db_conn.with_conn
+def ratings_table_setup(con: connection):
+    with con.cursor() as cur:
+        # cur.execute('''DROP TABLE ratings''')
+        cur.execute('''CREATE TABLE IF NOT EXISTS ratings (
+            rating_id serial PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            tutor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            rating FLOAT)
+            ;'''
+            )
+    con.commit()
+
+@db_conn.with_conn
+def rating_check_db(con: connection, user_id, tutor_id):
+    with con.cursor() as cur:
+        try:
+            cur.execute('''SELECT rating FROM ratings
+                 WHERE user_id=%s AND tutor_id=%s''',
+                (user_id, tutor_id,))
+            rating = cur.fetchone()
+            
+            return rating
+        except Exception as e:
+            print("Database update error:", e)
+            return False
+        
+@db_conn.with_conn
+def ave_rating_load_db(con: connection, tutor_id):
+    with con.cursor() as cur:
+        try:
+            cur.execute('''SELECT rating FROM ratings
+                 WHERE tutor_id=%s''',
+                (tutor_id,))
+            totalRating = list(cur.fetchall())
+            total = 0
+            if totalRating:
+                for r in totalRating:
+                    total += r[0]
+                total = total / len(totalRating)
+            print(total)
+            
+            return total
+        except Exception as e:
+            print("Database update error:", e)
+            return False
+        
+@db_conn.with_conn
+def rating_db(con: connection, user_id, tutor_id, rated, rating):
+    with con.cursor() as cur:
+        try:
+            if rated:
+                cur.execute("UPDATE ratings SET rating = %s WHERE user_id = %s AND tutor_id = %s;",
+                            (rating, user_id, tutor_id))
+                con.commit()
+                return True
+                
+            else:
+                cur.execute("INSERT INTO ratings (user_id, tutor_id, rating) VALUES (%s, %s, %s);",
+                            (user_id, tutor_id, rating))
+                con.commit()
+                return True
+
+        except Exception as e:
+            print("Database update error:", e)
+            return False
