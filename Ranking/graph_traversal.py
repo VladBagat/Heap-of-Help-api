@@ -51,6 +51,7 @@ class GraphSearcher:
         
         if user.depth == self.min_depth: 
             return None
+
         
         target_list : List[Node] = user.children
                 

@@ -42,14 +42,17 @@ def tags_table_setup(con : connection):
     with con.cursor() as cur:
         
         user_tags = sql.SQL(
+
             """CREATE TABLE IF NOT EXISTS tags 
             (tag_id serial PRIMARY KEY,
+
             user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
             tag1 INT,
             tag2 INT,
             tag3 INT,
             tag4 INT,
             tag5 INT);""")
+
         
         cur.execute(user_tags)
     con.commit()
@@ -113,7 +116,7 @@ def validate_username(con : connection, request_username):
         else:
             return False
 
-       
+      
 @db_conn.with_conn 
 def register_profile(con: connection, request_profile, request_username, hashed_password, 
                    request_forename, request_surname, request_email, request_age,
@@ -154,8 +157,29 @@ def register_profile(con: connection, request_profile, request_username, hashed_
 @db_conn.with_conn
 def login_user_db(con: connection, request_username, request_password):
     with con.cursor() as cur:
+        # Error for Unique field violation
+        UserExists = errors.lookup('23505')
+        try:
+            cur.execute(sql.SQL(
+                "INSERT INTO users (username, password) VALUES ({username}, {password});"
+            ).format(
+                username=sql.Literal(request_username),
+                password=sql.Literal(hashed_password)
+            ))
+        except UserExists:
+            return False
+        else:
+            con.commit()
+            return True
+
+
+@db_conn.with_conn
+def login_user_db(con: connection, request_username, request_password):
+    with con.cursor() as cur:
         cur.execute(sql.SQL(
+
             "SELECT password, id FROM users WHERE username={username};"
+
             ).format(
             username=sql.Literal(request_username),
             ))

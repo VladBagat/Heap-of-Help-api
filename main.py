@@ -20,6 +20,12 @@ from ranking import RankingAlgorithm
 from Ranking.lookup_table import LookupTableGenerator
 
 
+from database import register_user_db, fetch_user_tags, fetch_item_tags, tags_table_setup, items_table_setup, users_table_setup, fetch_recommended_items, login_user_db
+from utils import token_required
+from ranking import RankingAlgorithm
+from Ranking.lookup_table import LookupTableGenerator
+
+
 app = Flask(__name__)
 
 #TODO : This area will be substitues with __init__ when we will move this to a class. 
@@ -31,6 +37,7 @@ profiles_table_setup()
 tags_table_setup()  
 messages_table_setup()
 ratings_table_setup()
+
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["https://heap-of-help.vercel.app", "http://localhost:5173"]}})
 
 load_dotenv()
@@ -81,6 +88,23 @@ def check_owner(current_user, current_id):
     
     return response
 
+@app.route("/pageowner", methods=['POST'])
+@token_required
+def check_owner(current_user):
+    if current_user == request.json.get('username'):
+        response = make_response(jsonify({
+            "success": True,
+            "message": "User is owner"}, 200
+    ))
+
+    else:
+        response = make_response(jsonify({
+            "success": False,
+            "message": "User is not owner"}, 401
+    ))
+ 
+    return response
+
 
 @app.route("/login", methods=['POST'])
 def authorize_user_credentials():
@@ -104,6 +128,7 @@ def authorize_user_credentials():
             }), 200)
             if remember:
                 token = generate_jwt({"username": request_username, "user_id": status,
+
                                   "exp": datetime.now(timezone.utc) + timedelta(
                                       days=14)})
 
@@ -121,17 +146,19 @@ def authorize_user_credentials():
                 "success": False,
                 "message": "Authorization unsuccessful"}
             ), 401)
+
             return response
 
 
 @app.route("/logout", methods=['POST'])
 def logout():
     expired_token = generate_jwt({"user_id": "invalid", "exp": datetime.now(timezone.utc) - timedelta(seconds=1)})
-    
+
     response = make_response(jsonify({
         "success": True,
         "message": "Logged out successfully"
     }))
+
     
     # Set the JWT cookie to expire immediately
     response.set_cookie(
@@ -561,6 +588,44 @@ def rating(current_user, current_id):
             "success": False,
             "message": "Already rated this tutor",
         }), 403
+
+@app.route("/content", methods=['GET'])
+@token_required
+def fetch_content(user_id):
+    
+    if not user_id:
+        response = make_response(jsonify({
+        "success": False,
+        "message": "Credentials not found",}, 401
+    ))
+          
+    user_tags = list(fetch_user_tags(user_id))[0]
+    user_tags = [tag for tag in user_tags if tag is not None]
+    item_tags_list = fetch_item_tags()
+    
+    item_tags_dict = {}
+    
+    result_dict = {}
+    
+    for item in item_tags_list:
+        item_tags_dict.update({item[1]: list(item[1:])})
+        
+    for key, value in item_tags_dict.items():
+        value = [tag for tag in value if tag is not None]
+        result_dict.update({key: ra.calculate_content_score(user_tags, value)})
+            
+    results = [key for key, value in sorted(result_dict.items(), key=lambda x: x[1]['final_score'], reverse=True)[:10]]
+        
+    items = fetch_recommended_items(results)
+    
+    
+    response = make_response(jsonify({
+        "success": True,
+        "message": f"Fetched {len(items)} items",
+        "content": items}, 200)
+    )
+            
+    return response    
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
